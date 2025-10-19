@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { usersTable } from "./db/schema.js";
+import { createUser } from "./users/createUser.js";
 
 type User = {
   id: number;
@@ -12,9 +13,9 @@ type User = {
   email: string;
 };
 
-const db = drizzle(process.env.DATABASE_URL!);
+export const db = drizzle(process.env.DATABASE_URL!);
 
-const app = new Hono();
+export const app = new Hono();
 
 app.get("/", async (c) => {
   const users = await db.select().from(usersTable);
@@ -25,19 +26,7 @@ app.get("/about", (c) => {
   return c.text("About Page");
 });
 
-app.post("/create", async (c) => {
-  const json = await c.req.json();
-  if (!json.name || !json.age || !json.email) {
-    return c.json({ error: "Missing fields" }, 400);
-  }
-  const response = await db.insert(usersTable).values({
-    name: json.name,
-    age: json.age,
-    email: json.email,
-  });
-  return c.json({ success: true, user: response });
-});
-
+await createUser();
 serve(
   {
     fetch: app.fetch,
