@@ -6,7 +6,7 @@ import z from "zod";
 export const UserSchema = z.object({
   name: z.string("Nome inválido").min(3, "Precisa ter 3 no minimo caracteres"),
   birthDate: z.string("Data de nascimento inválida").optional(),
-  email: z.string().email("Email inválido"),
+  email: z.email("Email inválido"),
   expirationDate: z.string("Data de expiração inválida").optional(),
 });
 
