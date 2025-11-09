@@ -1,18 +1,18 @@
-import { db } from "../index";
-import { usersTable } from "../db/schema";
+import { db } from "../../index";
+import { usersTable } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 
-export const UserSchema = z.object({
+export const createUserSchema = z.object({
   name: z.string("Nome inválido").min(3, "Precisa ter 3 no minimo caracteres"),
   birthDate: z.string("Data de nascimento inválida").optional(),
   email: z.email("Email inválido"),
   expirationDate: z.string("Data de expiração inválida").optional(),
 });
 
-export type newUser = z.infer<typeof UserSchema>;
+export type createUserType = z.infer<typeof createUserSchema>;
 
-export async function createUser(newUser: newUser) {
+export async function createUser(newUser: createUserType) {
   try {
     // 🔍 Verifica se o e-mail já existe
     const existing = await db
