@@ -32,6 +32,6 @@ export const rentsTable = pgTable("rents", {
   gameId: integer("game_id").references(() => gamesTable.id),
   rentalType: rentalTypeEnum("rental_type").notNull(),
   startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
+  endDate: date("end_date"), // Removido .notNull()
   returned: boolean("returned").default(false),
 });
