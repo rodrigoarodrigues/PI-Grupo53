@@ -14,6 +14,7 @@ const LOGO = {
 };
 
 const SCREEN_OPTIONS = {
+  headerTitle: '',
   headerTransparent: true,
   headerRight: () => <ThemeToggle />,
 };
@@ -54,8 +55,13 @@ export default function Screen() {
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View className="flex-1 items-center justify-center gap-8 p-4">
         {data?.map((game: Game) => (
-          <View key={game.id} className="flex-row items-center justify-center gap-4">
-            <Image source={game.image} style={IMAGE_STYLE} />
+          <View
+            key={game.id}
+            className="flex-col items-center justify-center gap-4 rounded-md border border-border p-4">
+            <Image
+              source={{ uri: game.imageUrl }}
+              className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
+            />
             <Text className="text-center text-xl">{game.title}</Text>
           </View>
         ))}
