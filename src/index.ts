@@ -6,6 +6,7 @@ import pkg from "pg";
 import { getUsersRoutes } from "./routes/users";
 import { getGamesRoutes } from "./routes/games";
 import { getRentsRoutes } from "./routes/rents";
+import { cors } from "hono/cors";
 
 const { Pool } = pkg;
 
@@ -15,6 +16,8 @@ const pool = new Pool({
 
 export const db = drizzle(pool);
 export const app = new Hono();
+
+app.use("/*", cors());
 
 // Registrar rotas
 getUsersRoutes();

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { Game, getGames } from '@/data/games/getGames';
 import { Link, Stack } from 'expo-router';
 import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
@@ -13,7 +14,6 @@ const LOGO = {
 };
 
 const SCREEN_OPTIONS = {
-  title: 'React Native Reusables',
   headerTransparent: true,
   headerRight: () => <ThemeToggle />,
 };
@@ -25,33 +25,40 @@ const IMAGE_STYLE: ImageStyle = {
 
 export default function Screen() {
   const { colorScheme } = useColorScheme();
+  const { isPending, error, data, isFetching } = getGames();
+
+  if (isPending) {
+    return (
+      <>
+        <Stack.Screen options={SCREEN_OPTIONS} />
+        <View className="flex-1 items-center justify-center gap-8 p-4">
+          <Text className="text-center text-xl">Loading...</Text>
+        </View>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Stack.Screen options={SCREEN_OPTIONS} />
+        <View className="flex-1 items-center justify-center gap-8 p-4">
+          <Text className="text-center text-xl">Error: {error.message}</Text>
+        </View>
+      </>
+    );
+  }
 
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View className="flex-1 items-center justify-center gap-8 p-4">
-        <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
-        <View className="gap-2 p-4">
-          <Text className="ios:text-foreground font-mono text-sm text-muted-foreground">
-            1. Edit <Text variant="code">app/index.tsx</Text> to get started.
-          </Text>
-          <Text className="ios:text-foreground font-mono text-sm text-muted-foreground">
-            2. Save to see your changes instantly.
-          </Text>
-        </View>
-        <View className="flex-row gap-2">
-          <Link href="https://reactnativereusables.com" asChild>
-            <Button>
-              <Text>Browse the Docs</Text>
-            </Button>
-          </Link>
-          <Link href="https://github.com/founded-labs/react-native-reusables" asChild>
-            <Button variant="ghost">
-              <Text>Star the Repo</Text>
-              <Icon as={StarIcon} />
-            </Button>
-          </Link>
-        </View>
+        {data?.map((game: Game) => (
+          <View key={game.id} className="flex-row items-center justify-center gap-4">
+            <Image source={game.image} style={IMAGE_STYLE} />
+            <Text className="text-center text-xl">{game.title}</Text>
+          </View>
+        ))}
       </View>
     </>
   );
