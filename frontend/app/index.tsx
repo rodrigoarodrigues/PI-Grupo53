@@ -1,11 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { Game, getGames } from '@/data/games/getGames';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { CreateGameProps } from '@/data/games/createGame';
+import { GetGameProps, getGames } from '@/data/games/getGames';
 import { Link, Stack } from 'expo-router';
 import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Image, type ImageStyle, View } from 'react-native';
 
 const LOGO = {
@@ -25,6 +29,32 @@ const IMAGE_STYLE: ImageStyle = {
 };
 
 export default function Screen() {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async (game: CreateGameProps) => {
+      const response = await fetch(`http://localhost:3000/games`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(game),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create game');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      console.log('Game created successfully');
+    },
+    onError: () => {
+      console.error('Failed to create game');
+    },
+  });
+
   const { colorScheme } = useColorScheme();
   const { isPending, error, data, isFetching } = getGames();
 
@@ -53,18 +83,37 @@ export default function Screen() {
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="flex-1 items-center justify-center gap-8 p-4">
-        {data?.map((game: Game) => (
+      <Button
+        className="mx-auto mt-4 max-w-min p-4"
+        onPress={() =>
+          mutation.mutate({
+            uuid: uuidv4(),
+            title: uuidv4(),
+            quantity: 1,
+            imageUrl:
+              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnq0q5asnJAsOlbm3jArzIhL3NMZvMJH5sxw&s',
+          })
+        }>
+        <Text>Create Game</Text>
+      </Button>
+      <View className="flex-1 flex-col items-center justify-center">
+        <View className="scrollbar-hidden mx-auto h-[calc(100vh-100px)] w-full max-w-5xl overflow-y-scroll">
           <View
-            key={game.id}
-            className="flex-col items-center justify-center gap-4 rounded-md border border-border p-4">
-            <Image
-              source={{ uri: game.imageUrl }}
-              className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
-            />
-            <Text className="text-center text-xl">{game.title}</Text>
+            className="grid justify-center gap-4"
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 12rem))' }}>
+            {data?.map((game: GetGameProps) => (
+              <View
+                key={game.id}
+                className="flex w-48 flex-col items-center justify-between gap-4 rounded-md border border-border p-4">
+                <Image
+                  source={{ uri: game.imageUrl }}
+                  className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
+                />
+                <Text className="text-center text-xl">{game.title}</Text>
+              </View>
+            ))}
           </View>
-        ))}
+        </View>
       </View>
     </>
   );

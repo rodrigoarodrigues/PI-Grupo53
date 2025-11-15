@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-export interface Game {
+export interface GetGameProps {
   id: string;
   uuid: string;
   title: string;
