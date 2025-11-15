@@ -22,21 +22,16 @@ module.exports = defineConfig([
         // You can also add a manual alias as a fallback
         // This is often not needed if 'typescript' block works
         alias: {
-          map: [
-            ['@', './src'],
-          ],
+          map: [['@', './src']],
           extensions: ['.js', '.jsx', '.ts', '.tsx'],
         },
       },
-      'import/ignore': [
-        'node_modules',
-        '\\.(json|css|scss|less|hbs|svg|jpg|png)$',
-      ],
+      'import/ignore': ['node_modules', '\\.(json|css|scss|less|hbs|svg|jpg|png)$'],
     },
     rules: {
       // This rule is provided by eslint-plugin-import
       'import/no-unresolved': 'error',
       // Other rules...
     },
-  };
+  },
 ]);
