@@ -4,31 +4,47 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 
 export const createUserSchema = z.object({
-  name: z.string("Nome inválido").min(3, "Precisa ter 3 no minimo caracteres"),
-  birthDate: z.string("Data de nascimento inválida").optional(),
-  email: z.email("Email inválido"),
-  expirationDate: z.string("Data de expiração inválida").optional(),
+  name: z.string().min(3, "Precisa ter no mínimo 3 caracteres"),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+  email: z.string().email("Email inválido"),
+  expirationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
 });
 
 export type createUserType = z.infer<typeof createUserSchema>;
 
 export async function createUser(newUser: createUserType) {
   try {
+    // Validação manual
+    const validated = createUserSchema.parse(newUser);
+
     // 🔍 Verifica se o e-mail já existe
     const existing = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, newUser.email));
+      .where(eq(usersTable.email, validated.email));
 
     if (existing.length > 0) {
       console.warn(
-        `⚠️  Usuário com e-mail ${newUser.email} já existe. Nenhum novo registro criado.`,
+        `⚠️  Usuário com e-mail ${validated.email} já existe. Nenhum novo registro criado.`,
       );
-      return;
+      return null;
     }
 
     // 🧩 Cria novo usuário
-    const inserted = await db.insert(usersTable).values(newUser).returning();
+    const userData: any = {
+      name: validated.name,
+      email: validated.email,
+    };
+
+    if (validated.birthDate) {
+      userData.birthDate = validated.birthDate;
+    }
+
+    if (validated.expirationDate) {
+      userData.expirationDate = validated.expirationDate;
+    }
+
+    const inserted = await db.insert(usersTable).values(userData).returning();
     console.log("✅ Usuário criado com sucesso!", inserted[0]);
 
     return inserted[0];
