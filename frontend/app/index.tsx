@@ -10,18 +10,40 @@ import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Image, type ImageStyle, View } from 'react-native';
+import { Image, type ImageStyle, Platform, View } from 'react-native';
+import { ExtendedStackNavigationOptions } from 'expo-router/build/layouts/StackClient';
 
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
   dark: require('@/assets/images/react-native-reusables-dark.png'),
 };
 
-const SCREEN_OPTIONS = {
-  headerTitle: '',
-  headerTransparent: true,
-  headerRight: () => <ThemeToggle />,
-};
+function getScreenOptions(colorScheme: 'light' | 'dark' = 'light'): ExtendedStackNavigationOptions {
+  return {
+    headerTitle: () => (
+      <View style={{ padding: 8 }}>
+        <Text
+          style={{
+            fontFamily: Platform.select({
+              android: 'Jersey 10',
+              ios: 'Jersey 10',
+              web: '"Jersey 10", sans-serif',
+            }),
+            fontSize: 48,
+            color: 'pink',
+            letterSpacing: 2,
+            textShadowColor: 'brown',
+            textShadowOffset: { width: 3, height: 1 },
+            textShadowRadius: 1,
+          }}>
+          SAKURA ARCADE
+        </Text>
+      </View>
+    ),
+    headerTransparent: true,
+    headerRight: () => <ThemeToggle />,
+  };
+}
 
 const IMAGE_STYLE: ImageStyle = {
   height: 76,
@@ -61,7 +83,7 @@ export default function Screen() {
   if (isPending) {
     return (
       <>
-        <Stack.Screen options={SCREEN_OPTIONS} />
+        <Stack.Screen options={getScreenOptions(colorScheme)} />
         <View className="flex-1 items-center justify-center gap-8 p-4">
           <Text className="text-center text-xl">Loading...</Text>
         </View>
@@ -72,7 +94,7 @@ export default function Screen() {
   if (error) {
     return (
       <>
-        <Stack.Screen options={SCREEN_OPTIONS} />
+        <Stack.Screen options={getScreenOptions(colorScheme)} />
         <View className="flex-1 items-center justify-center gap-8 p-4">
           <Text className="text-center text-xl">Error: {error.message}</Text>
         </View>
@@ -82,7 +104,7 @@ export default function Screen() {
 
   return (
     <>
-      <Stack.Screen options={SCREEN_OPTIONS} />
+      <Stack.Screen options={getScreenOptions(colorScheme)} />
       <Button
         className="mx-auto mt-4 max-w-min p-4"
         onPress={() =>
@@ -102,15 +124,18 @@ export default function Screen() {
             className="grid justify-center gap-4"
             style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 12rem))' }}>
             {data?.map((game: GetGameProps) => (
-              <View
-                key={game.id}
-                className="flex w-48 flex-col items-center justify-between gap-4 rounded-md border border-border p-4">
-                <Image
-                  source={{ uri: game.imageUrl }}
-                  className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
-                />
-                <Text className="text-center text-xl">{game.title}</Text>
-              </View>
+              <Link
+                href={{ pathname: '/games/[uuid]', params: { uuid: game.uuid } }}
+                key={game.uuid}
+                asChild>
+                <View className="flex w-48 flex-col items-center justify-between gap-4 rounded-md border border-border p-4">
+                  <Image
+                    source={{ uri: game.imageUrl }}
+                    className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
+                  />
+                  <Text className="text-center text-xl">{game.title}</Text>
+                </View>
+              </Link>
             ))}
           </View>
         </View>

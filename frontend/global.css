@@ -1,10 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 360 100% 95%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -19,8 +19,8 @@
     --accent: 0 0% 96.1%;
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
+    --border: 0 100% 90%;
+    --input: 0 100% 90%;
     --ring: 0 0% 63%;
     --radius: 0.625rem;
     --chart-1: 12 76% 61%;
