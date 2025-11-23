@@ -5,7 +5,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
-    }
+    },
+    // ✨ REMOVER as linhas de JSX, se não for um projeto Hono
+    // "jsx": "react-jsx",
+    // "jsxImportSource": "hono/jsx", 
+    "outDir": "./dist" 
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
 }
