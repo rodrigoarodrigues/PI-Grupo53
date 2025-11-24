@@ -105,33 +105,45 @@ export default function CatalogScreen() {
       <View className="flex-1 flex-row bg-[#0a0c10]">
         <Sidebar />
 
-        <View className="flex-1">
+        <View className="flex-1 relative">
           <LinearGradient
             colors={['#142235', '#0a0c10']}
             start={{ x: 0.5, y: 0.2 }}
             end={{ x: 0.5, y: 1 }}
             className="flex-1">
+            {/* Wallet Header - Canto superior direito fixo */}
+            <View className="absolute top-6 right-8 z-10">
+              <WalletHeader onDepositPress={() => setShowDepositModal(true)} />
+            </View>
+            
             <ScrollView
               className="flex-1"
               contentContainerStyle={{ paddingBottom: 40 }}
               showsVerticalScrollIndicator={false}>
               <View className="px-8 pt-6">
-                {/* Botões Novo Jogo e Depositar - Lado a lado */}
-                <View className="flex-row items-center justify-between mb-4">
-                  {isAdmin && (
+                {/* Botão Novo Jogo (apenas admin) */}
+                {isAdmin && (
+                  <View className="mb-4 self-start">
                     <Pressable onPress={() => setIsCreateModalVisible(true)}>
                       <LinearGradient
                         colors={['#6b8bff', '#bc7cff']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        className="flex-row items-center px-4 py-2 rounded-lg">
-                        <PlusIcon size={20} color="#fff" />
-                        <Text className="text-white font-semibold ml-2">Novo Jogo</Text>
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingHorizontal: 16,
+                          paddingVertical: 10,
+                          borderRadius: 8,
+                        }}>
+                        <PlusIcon size={18} color="#fff" />
+                        <Text className="text-white font-semibold ml-2" style={{ fontSize: 14 }}>
+                          Novo Jogo
+                        </Text>
                       </LinearGradient>
                     </Pressable>
-                  )}
-                  <WalletHeader onDepositPress={() => setShowDepositModal(true)} />
-                </View>
+                  </View>
+                )}
                 
                 <View className="mb-4">
                   <Text className="text-2xl font-semibold text-white">
