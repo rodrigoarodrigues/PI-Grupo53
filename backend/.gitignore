@@ -1,10 +1,14 @@
 # Dependencies
 node_modules/
+bun.lockb
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
-bun.lockb
 
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
 
 # Logs
 logs/
@@ -15,29 +19,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Build outputs
-dist/
-build/
-*.tsbuildinfo
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
 # IDE
 .vscode/
-!.vscode/launch.json
-!.vscode/*.code-snippets
 .idea/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+*.test.js.map
 
 # Temporary files
 tmp/
 temp/
 *.tmp
 
-# Testing
-coverage/
-.nyc_output/
+# OS
+Thumbs.db
+.DS_Store
+
