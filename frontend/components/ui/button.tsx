@@ -93,12 +93,22 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
   VariantProps<typeof buttonVariants>;
 
 function Button({ className, variant, size, ...props }: ButtonProps) {
+  // Remove pointerEvents da prop se existir para evitar warning
+  // Usamos apenas via CSS classes (pointer-events-none)
+  const { pointerEvents, style, ...restProps } = props as any;
+  
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size }), className)}
         role="button"
-        {...props}
+        style={[
+          style,
+          pointerEvents && Platform.OS === 'web' 
+            ? { pointerEvents: pointerEvents as any } 
+            : undefined
+        ]}
+        {...restProps}
       />
     </TextClassContext.Provider>
   );

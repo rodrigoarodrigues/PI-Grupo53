@@ -55,6 +55,10 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  body {
+    background: radial-gradient(80% 80% at 50% 20%, #142235, #0a0c10);
+  }
 }
 
 @layer utilities {

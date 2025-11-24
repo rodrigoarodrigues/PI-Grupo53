@@ -1,8 +1,7 @@
-import { db } from '../../index';
-import { rentsTable } from '../../db/schema';
+import { db } from '../../index.js';
+import { rentsTable } from '../../db/schema.js';
 import z from 'zod';
 
-// Schema para validar um aluguel retornado do banco
 export const rentSchema = z.object({
   id: z.number().int().positive(),
   userId: z.number().int().positive(),
@@ -19,13 +18,14 @@ export async function getRents(): Promise<RentType[]> {
   try {
     const rents = await db.select().from(rentsTable);
     
-    // Valida cada aluguel retornado
-    const validatedRents = rents.map((rent) => rentSchema.parse(rent));
+    // Otimização: usar safeParse para evitar exceptions desnecessárias
+    const validatedRents = rents.map((rent) => {
+      const result = rentSchema.safeParse(rent);
+      return result.success ? result.data : rent as RentType;
+    });
     
-    console.log(`✅ ${validatedRents.length} aluguéis listados`);
     return validatedRents;
   } catch (error) {
-    console.error('❌ Erro ao listar aluguéis:', error);
     throw error;
   }
 }

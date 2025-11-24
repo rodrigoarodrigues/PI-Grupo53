@@ -1,164 +1,226 @@
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
+import { Stack, useRouter, Redirect } from 'expo-router';
+import { View, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { MailIcon, LockIcon, Gamepad2Icon } from 'lucide-react-native';
+import { Link } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
-import { CreateGameProps } from '@/data/games/createGame';
-import { GetGameProps, getGames } from '@/data/games/getGames';
-import { Link, Stack } from 'expo-router';
-import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import * as React from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { Image, type ImageStyle, Platform, View } from 'react-native';
-import { ExtendedStackNavigationOptions } from 'expo-router/build/layouts/StackClient';
+export default function LoginScreen() {
+  const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
-const LOGO = {
-  light: require('@/assets/images/react-native-reusables-light.png'),
-  dark: require('@/assets/images/react-native-reusables-dark.png'),
-};
+  // Dados do formulário
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-function getScreenOptions(colorScheme: 'light' | 'dark' = 'light'): ExtendedStackNavigationOptions {
-  return {
-    headerTitle: () => (
-      <View style={{ padding: 8 }}>
-        <Text
-          style={{
-            fontFamily: Platform.select({
-              android: 'Jersey 10',
-              ios: 'Jersey 10',
-              web: '"Jersey 10", sans-serif',
-            }),
-            fontSize: 48,
-            color: 'pink',
-            letterSpacing: 2,
-            textShadowColor: 'brown',
-            textShadowOffset: { width: 3, height: 1 },
-            textShadowRadius: 1,
-          }}>
-          SAKURA ARCADE
-        </Text>
+  if (authLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-[#0a0c10]">
+        <ActivityIndicator size="large" color="#6b8bff" />
       </View>
-    ),
-    headerTransparent: true,
-    headerRight: () => <ThemeToggle />,
+    );
+  }
+
+  // Se já estiver autenticado, redireciona para o catálogo
+  // Mas isso só acontece se o usuário já tinha uma sessão ativa
+  if (isAuthenticated) {
+    return <Redirect href="/catalog" />;
+  }
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validação do email
+    if (!email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    // Validação da senha
+    if (!password.trim()) {
+      newErrors.password = 'Senha é obrigatória';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-}
 
-const IMAGE_STYLE: ImageStyle = {
-  height: 76,
-  width: 76,
-};
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
 
-export default function Screen() {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: async (game: CreateGameProps) => {
-      const response = await fetch(`http://localhost:3000/games`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(game),
-      });
+    setIsLoading(true);
 
-      if (!response.ok) {
-        throw new Error('Failed to create game');
+    try {
+      const success = await login(email, password);
+
+      if (success) {
+        // Redireciona para o catálogo após login
+        router.replace('/catalog');
+      } else {
+        Alert.alert('Erro', 'Email ou senha incorretos');
       }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
-      console.log('Game created successfully');
-    },
-    onError: () => {
-      console.error('Failed to create game');
-    },
-  });
-
-  const { colorScheme } = useColorScheme();
-  const { isPending, error, data, isFetching } = getGames();
-
-  if (isPending) {
-    return (
-      <>
-        <Stack.Screen options={getScreenOptions(colorScheme)} />
-        <View className="flex-1 items-center justify-center gap-8 p-4">
-          <Text className="text-center text-xl">Loading...</Text>
-        </View>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Stack.Screen options={getScreenOptions(colorScheme)} />
-        <View className="flex-1 items-center justify-center gap-8 p-4">
-          <Text className="text-center text-xl">Error: {error.message}</Text>
-        </View>
-      </>
-    );
-  }
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro ao fazer login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
-      <Stack.Screen options={getScreenOptions(colorScheme)} />
-      <Button
-        className="mx-auto mt-4 max-w-min p-4"
-        onPress={() =>
-          mutation.mutate({
-            uuid: uuidv4(),
-            title: uuidv4(),
-            quantity: 1,
-            imageUrl:
-              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnq0q5asnJAsOlbm3jArzIhL3NMZvMJH5sxw&s',
-          })
-        }>
-        <Text>Create Game</Text>
-      </Button>
-      <View className="flex-1 flex-col items-center justify-center">
-        <View className="scrollbar-hidden mx-auto h-[calc(100vh-100px)] w-full max-w-5xl overflow-y-scroll">
-          <View
-            className="grid justify-center gap-4"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 12rem))' }}>
-            {data?.map((game: GetGameProps) => (
-              <Link
-                href={{ pathname: '/games/[uuid]', params: { uuid: game.uuid } }}
-                key={game.uuid}
-                asChild>
-                <View className="flex w-48 flex-col items-center justify-between gap-4 rounded-md border border-border p-4">
-                  <Image
-                    source={{ uri: game.imageUrl }}
-                    className="aspect-square w-full rounded-md bg-gray-200 dark:bg-border"
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <LinearGradient
+        colors={['#0a0c10', '#142235', '#1a1f2e']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="flex-1">
+        <View className="flex-1 flex-row">
+         
+          <View className="flex-1 items-center justify-center px-12" style={{ minWidth: 350 }}>
+            <View className="items-center">
+             
+              <View className="mb-6">
+                <Text
+                  className="text-6xl font-extrabold mb-2"
+                  style={{
+                    color: '#60a5fa',
+                    textShadowColor: '#bc7cff',
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 25,
+                    letterSpacing: 2,
+                  }}>
+                  SAKURA
+                </Text>
+                <Text
+                  className="text-6xl font-extrabold"
+                  style={{
+                    color: '#bc7cff',
+                    textShadowColor: '#6b8bff',
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 25,
+                    letterSpacing: 2,
+                  }}>
+                  ARCADE
+                </Text>
+              </View>
+
+             
+              <Text className="text-white text-lg mb-8 text-center">
+                Entre para um universo de jogos lendários
+              </Text>
+
+             
+              <View className="bg-white/5 border border-white/10 rounded-full p-6">
+                <Gamepad2Icon size={48} color="#60a5fa" />
+              </View>
+            </View>
+          </View>
+
+         
+          <View className="flex-1 items-center justify-center px-12" style={{ minWidth: 350 }}>
+            <View
+              className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-8"
+              style={{
+                shadowColor: '#60a5fa',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 20,
+                elevation: 10,
+              }}>
+             
+              <Text className="text-3xl font-bold text-white mb-8 text-center">
+                Entrar
+              </Text>
+
+             
+              <View className="mb-6">
+                <View className="flex-row items-center bg-white/5 border border-white/10 rounded-xl px-4 py-4 mb-2">
+                  <MailIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                  <Input
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Email"
+                    placeholderTextColor="#9ca3af"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    className="flex-1 bg-transparent border-0"
+                    style={{ color: '#fff', fontSize: 16 }}
                   />
-                  <Text className="text-center text-xl">{game.title}</Text>
                 </View>
-              </Link>
-            ))}
+                {errors.email && (
+                  <Text className="text-red-400 text-xs mt-1">{errors.email}</Text>
+                )}
+              </View>
+
+             
+              <View className="mb-8">
+                <View className="flex-row items-center bg-white/5 border border-white/10 rounded-xl px-4 py-4 mb-2">
+                  <LockIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                  <Input
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Senha"
+                    placeholderTextColor="#9ca3af"
+                    secureTextEntry
+                    className="flex-1 bg-transparent border-0"
+                    style={{ color: '#fff', fontSize: 16 }}
+                  />
+                </View>
+                {errors.password && (
+                  <Text className="text-red-400 text-xs mt-1">{errors.password}</Text>
+                )}
+              </View>
+
+             
+              <Pressable
+                onPress={handleLogin}
+                disabled={isLoading}
+                className="w-full mb-6">
+                <LinearGradient
+                  colors={['#60a5fa', '#bc7cff']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    paddingVertical: 16,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: '#60a5fa',
+                  }}>
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-lg font-bold text-white">Entrar</Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+
+             
+              <Pressable>
+                <Link href="/register" asChild>
+                  <Text className="text-center text-gray-400 text-sm">
+                    Não tem uma conta? <Text className="text-blue-400">Criar Conta</Text>
+                  </Text>
+                </Link>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </>
-  );
-}
-
-const THEME_ICONS = {
-  light: SunIcon,
-  dark: MoonStarIcon,
-};
-
-function ThemeToggle() {
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-
-  return (
-    <Button
-      onPressIn={toggleColorScheme}
-      size="icon"
-      variant="ghost"
-      className="ios:size-9 rounded-full web:mx-4">
-      <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-5" />
-    </Button>
   );
 }

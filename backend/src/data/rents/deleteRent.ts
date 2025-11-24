@@ -1,5 +1,5 @@
-import { db } from '../../index';
-import { rentsTable } from '../../db/schema';
+import { db } from '../../index.js';
+import { rentsTable } from '../../db/schema.js';
 import { eq } from 'drizzle-orm';
 import z from 'zod';
 
@@ -9,7 +9,6 @@ export type DeleteRentType = z.infer<typeof deleteRentSchema>;
 
 export async function deleteRent(id: DeleteRentType) {
   try {
-    // Valida o ID
     const validatedId = deleteRentSchema.parse(id);
 
     const result = await db
@@ -18,14 +17,11 @@ export async function deleteRent(id: DeleteRentType) {
       .returning();
 
     if (result.length === 0) {
-      console.warn(`⚠️  Aluguel com ID ${validatedId} não encontrado`);
       return null;
     }
 
-    console.log(`✅ Aluguel ${validatedId} deletado`);
     return result[0];
   } catch (error) {
-    console.error('❌ Erro ao deletar aluguel:', error);
     throw error;
   }
 }

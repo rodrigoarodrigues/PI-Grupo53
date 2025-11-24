@@ -1,5 +1,5 @@
-import { db } from '../../index';
-import { gamesTable } from '../../db/schema';
+import { db } from '../../index.js';
+import { gamesTable } from '../../db/schema.js';
 import { eq } from "drizzle-orm";
 import z from "zod";
 
@@ -8,6 +8,11 @@ export const updateGameSchema = z.object({
   quantity: z.number().int().min(0).optional(),
   uuid: z.string().uuid().optional(),
   imageUrl: z.string().url().optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  platform: z.string().max(50).optional().nullable(),
+  size: z.string().max(50).optional().nullable(),
+  multiplayer: z.boolean().optional().nullable(),
+  languages: z.string().max(255).optional().nullable(),
 }).refine((data) => Object.values(data).some((v) => v !== undefined), {
   message: "Pelo menos um campo deve ser fornecido",
 });
@@ -19,7 +24,6 @@ export async function updateGame(
   data: UpdateGameType,
 ) {
   try {
-    // valida id e dados
     const idSchema = z.number().int().positive("ID deve ser um número positivo");
     const validatedId = idSchema.parse(id);
     const validatedData = updateGameSchema.parse(data);
@@ -29,10 +33,8 @@ export async function updateGame(
       .set(validatedData)
       .where(eq(gamesTable.id, validatedId))
       .returning();
-    console.log("Jogo atualizado:", updated[0]);
     return updated[0];
   } catch (error) {
-    console.error("❌ Erro ao atualizar jogo:", error);
     throw error;
   }
 }

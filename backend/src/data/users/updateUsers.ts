@@ -1,11 +1,14 @@
-import { db } from "../../index";
-import { usersTable } from "../../db/schema";
+import { db } from "../../index.js";
+import { usersTable } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import z from "zod";
 
 export const updateUserSchema = z.object({
   name: z.string().min(1, "Nome não pode estar vazio").optional(),
   email: z.string().email("Email inválido").optional(),
+  phone: z.string().optional(),
+  cpf: z.string().optional(),
+  role: z.enum(["admin", "cliente"]).optional(),
   birthDate: z.string().date("Deve ser uma data válida (YYYY-MM-DD)").optional(),
   expirationDate: z.string().date("Deve ser uma data válida (YYYY-MM-DD)").optional(),
 }).refine(
@@ -24,21 +27,26 @@ export async function updateUser(
     const validatedId = idSchema.parse(id);
     const validatedData = updateUserSchema.parse(data);
 
+    const userData: any = { ...validatedData };
+    if (userData.phone) {
+      userData.phone = userData.phone.replace(/\D/g, '');
+    }
+    if (userData.cpf) {
+      userData.cpf = userData.cpf.replace(/\D/g, '');
+    }
+
     const updated = await db
       .update(usersTable)
-      .set(validatedData)
+      .set(userData)
       .where(eq(usersTable.id, validatedId))
       .returning();
 
     if (updated.length === 0) {
-      console.warn(`⚠️  Usuário com ID ${validatedId} não encontrado`);
       return null;
     }
 
-    console.log("✅ Usuário atualizado:", updated[0]);
     return updated[0];
   } catch (error) {
-    console.error("❌ Erro ao atualizar usuário:", error);
     throw error;
   }
 }
