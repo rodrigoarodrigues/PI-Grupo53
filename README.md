@@ -15,6 +15,8 @@ O **Sakura Arcade** é um sistema completo que permite:
 - 🏠 **Endereços**: Gerencie endereços de entrega dos clientes
 - 📱 **Interface moderna**: Aplicativo mobile e web com design elegante
 
+<img width="1916" height="901" alt="Captura de tela 2025-11-24 044444" src="https://github.com/user-attachments/assets/eb4be272-10b7-4bf7-abcb-7f619f0f77c0" />
+
 ---
 
 ## 🚀 Como começar
