@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'cliente';
+  wallet?: number;
 }
 
 interface AuthContextType {
@@ -17,6 +18,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isClient: boolean;
+  updateWallet: (newBalance: number) => void;
+  refreshWallet: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: userData.name,
         email: userData.email,
         role: userData.role,
+        wallet: userData.wallet || 0,
       };
 
       await storage.setItem('user', JSON.stringify(user));
@@ -98,6 +102,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateWallet = (newBalance: number) => {
+    if (user) {
+      const updatedUser = { ...user, wallet: newBalance };
+      setUser(updatedUser);
+      storage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
+  const refreshWallet = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3000/users/${user.id}/wallet`);
+      if (response.ok) {
+        const data = await response.json();
+        updateWallet(data.wallet);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar saldo:', error);
+    }
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
   const isClient = user?.role === 'cliente';
@@ -112,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isAdmin,
         isClient,
+        updateWallet,
+        refreshWallet,
       }}>
       {children}
     </AuthContext.Provider>

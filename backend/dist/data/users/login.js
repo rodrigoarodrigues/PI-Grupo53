@@ -21,11 +21,24 @@ export async function login(credentials) {
         if (user.password !== validated.password) {
             return null;
         }
+        // Tratar wallet que pode não existir ainda ou ser null
+        let walletValue = 0.00;
+        try {
+            if (user.wallet !== null && user.wallet !== undefined) {
+                const walletStr = user.wallet.toString();
+                walletValue = parseFloat(walletStr) || 0.00;
+            }
+        }
+        catch (error) {
+            console.warn('Erro ao processar wallet no login:', error);
+            walletValue = 0.00;
+        }
         return {
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role || 'cliente',
+            wallet: walletValue,
             message: 'Login realizado com sucesso',
         };
     }

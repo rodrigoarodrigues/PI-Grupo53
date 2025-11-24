@@ -29,6 +29,9 @@ export interface CreateRentResponse {
   };
   price: number;
   expectedReturnDate: string;
+  previousBalance?: number;
+  newBalance?: number;
+  amountDeducted?: number;
 }
 
 export function useCreateRent() {

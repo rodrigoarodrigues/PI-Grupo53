@@ -27,6 +27,7 @@ export const usersTable = pgTable("users", {
   expirationDate: date("expiration_date"),
   subscriptionLimit: integer("subscription_limit").default(3),
   isActive: boolean("is_active").default(true),
+  wallet: decimal("wallet", { precision: 10, scale: 2 }).default("0.00"),
 }, (table) => ({
   emailIdx: index("email_idx").on(table.email), // Para buscas de login
   isActiveIdx: index("is_active_idx").on(table.isActive), // Para filtrar usuários ativos
@@ -43,6 +44,7 @@ export const gamesTable = pgTable("games", {
   size: varchar("size", { length: 50 }),
   multiplayer: boolean("multiplayer").default(false),
   languages: varchar("languages", { length: 255 }),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00"),
 });
 
 export const rentsTable = pgTable("rents", {

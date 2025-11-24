@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CreateGameModal } from '@/components/games/CreateGameModal';
 import { PlusIcon } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { WalletHeader } from '@/components/wallet/WalletHeader';
+import { DepositModal } from '@/components/wallet/DepositModal';
 
 export default function CatalogScreen() {
   const { isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
@@ -20,6 +22,7 @@ export default function CatalogScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
 
   const filteredGames = useMemo(() => {
     if (!data) return [];
@@ -113,20 +116,27 @@ export default function CatalogScreen() {
               contentContainerStyle={{ paddingBottom: 40 }}
               showsVerticalScrollIndicator={false}>
               <View className="px-8 pt-6">
+                {/* Botões Novo Jogo e Depositar - Lado a lado */}
                 <View className="flex-row items-center justify-between mb-4">
+                  {isAdmin && (
+                    <Pressable onPress={() => setIsCreateModalVisible(true)}>
+                      <LinearGradient
+                        colors={['#6b8bff', '#bc7cff']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        className="flex-row items-center px-4 py-2 rounded-lg">
+                        <PlusIcon size={20} color="#fff" />
+                        <Text className="text-white font-semibold ml-2">Novo Jogo</Text>
+                      </LinearGradient>
+                    </Pressable>
+                  )}
+                  <WalletHeader onDepositPress={() => setShowDepositModal(true)} />
+                </View>
+                
+                <View className="mb-4">
                   <Text className="text-2xl font-semibold text-white">
                     Catálogo de Jogos
                   </Text>
-                  <Pressable onPress={() => setIsCreateModalVisible(true)}>
-                    <LinearGradient
-                      colors={['#6b8bff', '#bc7cff']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      className="flex-row items-center px-4 py-2 rounded-lg">
-                      <PlusIcon size={20} color="#fff" />
-                      <Text className="text-white font-semibold ml-2">Novo Jogo</Text>
-                    </LinearGradient>
-                  </Pressable>
                 </View>
               </View>
               <SearchAndFilters
@@ -163,6 +173,10 @@ export default function CatalogScreen() {
           </LinearGradient>
         </View>
       </View>
+      <DepositModal
+        visible={showDepositModal}
+        onClose={() => setShowDepositModal(false)}
+      />
     </>
   );
 }

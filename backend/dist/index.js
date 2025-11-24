@@ -24,7 +24,18 @@ getGamesRoutes();
 getRentsRoutes();
 getAddressesRoutes();
 app.get("/about", (c) => c.text("About Page"));
+const port = 3000;
 serve({
     fetch: app.fetch,
-    port: 3000,
+    port: port,
 });
+// Mensagem de servidor iniciado
+setTimeout(() => {
+    console.log("\n🚀 Servidor iniciado com sucesso!");
+    console.log(`📡 Servidor rodando em: http://localhost:${port}`);
+    const env = process.env.NODE_ENV || 'development';
+    console.log(`🌐 Ambiente: ${env}`);
+    const dbStatus = process.env.DATABASE_URL ? 'Conectado' : 'Não configurado';
+    console.log(`📊 Banco de dados: ${dbStatus}`);
+    console.log("✨ Pronto para receber requisições!\n");
+}, 100);

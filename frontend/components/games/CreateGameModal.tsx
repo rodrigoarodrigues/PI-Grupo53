@@ -32,6 +32,7 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
     size: '',
     multiplayer: false,
     languages: '',
+    price: 0,
   });
 
   const [multiplayerType, setMultiplayerType] = useState('');
@@ -46,6 +47,8 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
     { value: 'XBOX', label: 'Xbox' },
     { value: 'PC', label: 'PC' },
     { value: 'NINTENDO', label: 'Nintendo Switch' },
+    { value: 'MultiPlataforma', label: 'MultiPlataforma' },
+
   ];
 
   const multiplayerOptions: SelectOption[] = [
@@ -54,9 +57,9 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
   ];
 
   const multiplayerTypeOptions: SelectOption[] = [
-    { value: 'PRT', label: 'PRT' },
-    { value: 'ONL', label: 'ONL' },
-    { value: 'LOC', label: 'LOC' },
+    { value: 'COOP', label: 'COOP' },
+    { value: 'MOBA', label: 'MOBA' },
+    { value: 'Single Player', label: 'Single Player' },
   ];
 
   const generateUUID = () => {
@@ -108,6 +111,7 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
         size: '',
         multiplayer: false,
         languages: '',
+        price: 0,
       });
       setMultiplayerType('');
 
@@ -239,6 +243,45 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                 </Pressable>
               </View>
 
+              {/* Tamanho e Idioma - Dois campos lado a lado */}
+              <View className="mb-4">
+                <View className="flex-row gap-3">
+                  {/* Campo esquerdo - Tamanho */}
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold mb-2 text-sm">
+                      Tamanho
+                    </Text>
+                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                      <TextInput
+                        value={formData.size}
+                        onChangeText={(text) => setFormData({ ...formData, size: text })}
+                        placeholder="Ex: 50 GB"
+                        placeholderTextColor="#9ca3af"
+                        className="text-white text-base"
+                        style={{ color: '#fff' }}
+                      />
+                    </View>
+                  </View>
+                  
+                  {/* Campo direito - Idioma */}
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold mb-2 text-sm">
+                      Idioma
+                    </Text>
+                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                      <TextInput
+                        value={formData.languages}
+                        onChangeText={(text) => setFormData({ ...formData, languages: text })}
+                        placeholder="Ex: PT-BR, EN"
+                        placeholderTextColor="#9ca3af"
+                        className="text-white text-base"
+                        style={{ color: '#fff' }}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
               {/* Multiplayer - Dois campos lado a lado */}
               <View className="mb-4">
                 <Text className="text-white font-semibold mb-2 text-sm">
@@ -257,13 +300,13 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                     </Pressable>
                   </View>
                   
-                  {/* Campo direito - Tipo (Ex: PRT) */}
+                  {/* Campo direito - Tipo (Ex: COOP) */}
                   <View className="flex-1">
                     <Pressable
                       onPress={() => setShowMultiplayerTypeModal(true)}
                       className="flex-row items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                       <Text className={multiplayerType ? 'text-white' : 'text-gray-400'}>
-                        {multiplayerType || 'Ex: PRT'}
+                        {multiplayerType || 'Ex: COOP'}
                       </Text>
                       <ChevronDownIcon size={20} color="#9ca3af" />
                     </Pressable>
@@ -271,24 +314,50 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                 </View>
               </View>
 
-              {/* Quantidade */}
-              <View className="mb-6">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  Quantidade <Text className="text-red-400">*</Text>
-                </Text>
-                <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <TextInput
-                    value={formData.quantity.toString()}
-                    onChangeText={(text) => {
-                      const num = parseInt(text) || 0;
-                      setFormData({ ...formData, quantity: num });
-                    }}
-                    placeholder="0"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                    className="text-white text-base"
-                    style={{ color: '#fff' }}
-                  />
+              {/* Quantidade e Preço - Dois campos lado a lado */}
+              <View className="mb-4">
+                <View className="flex-row gap-3">
+                  {/* Campo esquerdo - Quantidade */}
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold mb-2 text-sm">
+                      Quantidade <Text className="text-red-400">*</Text>
+                    </Text>
+                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                      <TextInput
+                        value={formData.quantity.toString()}
+                        onChangeText={(text) => {
+                          const num = parseInt(text) || 0;
+                          setFormData({ ...formData, quantity: num });
+                        }}
+                        placeholder="0"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="numeric"
+                        className="text-white text-base"
+                        style={{ color: '#fff' }}
+                      />
+                    </View>
+                  </View>
+                  
+                  {/* Campo direito - Preço */}
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold mb-2 text-sm">
+                      Preço (R$)
+                    </Text>
+                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                      <TextInput
+                        value={formData.price?.toString() || '0'}
+                        onChangeText={(text) => {
+                          const num = parseFloat(text.replace(',', '.')) || 0;
+                          setFormData({ ...formData, price: num });
+                        }}
+                        placeholder="0,00"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="decimal-pad"
+                        className="text-white text-base"
+                        style={{ color: '#fff' }}
+                      />
+                    </View>
+                  </View>
                 </View>
               </View>
 

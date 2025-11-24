@@ -24,17 +24,7 @@ export function GameDetailsHeader() {
         }}>
         SAKURA ARCADE
       </Text>
-
       <View className="flex-row gap-4 items-center">
-        <View className="px-6 py-3 bg-white/5 rounded-xl border border-white/10">
-          <Text className="text-sm text-gray-300 font-medium">Jogos Disponíveis</Text>
-        </View>
-
-        <View className="px-8 py-3 bg-white/5 rounded-xl border border-white/10">
-          <Text className="text-3xl font-bold text-white">
-            {games?.length || 0}
-          </Text>
-        </View>
       </View>
     </View>
   );

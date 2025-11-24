@@ -8,6 +8,7 @@ export interface CreateGameProps {
   size?: string;
   multiplayer?: boolean;
   languages?: string;
+  price?: number;
 }
 
 export async function createGame(game: CreateGameProps) {

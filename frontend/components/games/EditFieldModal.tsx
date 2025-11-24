@@ -10,7 +10,7 @@ import { XIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GetGameProps } from '@/data/games/getGameFromId';
 
-type FieldType = 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages';
+type FieldType = 'title' | 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages';
 
 interface EditFieldModalProps {
   visible: boolean;
@@ -44,6 +44,8 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
     if (game && visible) {
       if (field === 'multiplayer') {
         setValue(game.multiplayer ? 'true' : 'false');
+      } else if (field === 'title') {
+        setValue(game.title || '');
       } else {
         setValue((game[field] as string) || '');
       }
@@ -133,7 +135,12 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
                 <Input
                   value={value}
                   onChangeText={setValue}
-                  placeholder={field === 'imageUrl' ? 'https://exemplo.com/imagem.jpg' : field === 'languages' ? 'Ex: PT BR, EN, ES' : 'Ex: 48 GB'}
+                  placeholder={
+                    field === 'title' ? 'Digite o título do jogo' :
+                    field === 'imageUrl' ? 'https://exemplo.com/imagem.jpg' :
+                    field === 'languages' ? 'Ex: PT BR, EN, ES' :
+                    'Ex: 48 GB'
+                  }
                   className="bg-white/5 border-white/10 text-white"
                   multiline={field === 'languages'}
                 />

@@ -16,8 +16,22 @@ export function getGamesRoutes() {
         return c.json(await updateGame(id, body));
     });
     app.delete("/games/:id", async (c) => {
-        const id = Number(c.req.param("id"));
-        await deleteGame(id);
-        return c.json({ message: `Jogo ${id} deletado.` });
+        try {
+            const id = Number(c.req.param("id"));
+            if (isNaN(id) || id <= 0) {
+                c.status(400);
+                return c.json({ error: "ID inválido" });
+            }
+            const result = await deleteGame(id);
+            if (!result.success) {
+                c.status(400);
+                return c.json({ error: result.error });
+            }
+            return c.json({ message: result.message || `Jogo ${id} deletado com sucesso` });
+        }
+        catch (error) {
+            c.status(500);
+            return c.json({ error: "Erro interno ao deletar jogo" });
+        }
     });
 }

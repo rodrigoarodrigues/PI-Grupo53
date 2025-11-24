@@ -5,27 +5,38 @@ import { Pressable } from 'react-native';
 import { PackageIcon, UserPlusIcon } from 'lucide-react-native';
 import { getActiveRents } from '@/data/rents/getActiveRents';
 import { getGames } from '@/data/games/getGames';
+import { WalletHeader } from '@/components/wallet/WalletHeader';
+import { useState } from 'react';
+import { DepositModal } from '@/components/wallet/DepositModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
   const { data: activeRents } = getActiveRents();
   const { data: games } = getGames();
+  const { isAuthenticated } = useAuth();
+  const [showDepositModal, setShowDepositModal] = useState(false);
 
   return (
-    <View className="flex-row items-center justify-between px-8 py-6">
-      <Text
-        className="text-5xl font-extrabold"
-        style={{
-          color: '#bc7cff',
-          textShadowColor: '#6b8bff',
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 25,
-          letterSpacing: 2,
-          fontWeight: '900',
-        }}>
-        SAKURA ARCADE
-      </Text>
+    <>
+      <View className="flex-row items-center justify-between px-8 py-6">
+        <Text
+          className="text-5xl font-extrabold"
+          style={{
+            color: '#bc7cff',
+            textShadowColor: '#6b8bff',
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 25,
+            letterSpacing: 2,
+            fontWeight: '900',
+          }}>
+          SAKURA ARCADE
+        </Text>
 
-      <View className="flex-row gap-4 items-center">
+        <View className="flex-row gap-4 items-center">
+          {/* Wallet Header - apenas se autenticado */}
+          {isAuthenticated && (
+            <WalletHeader onDepositPress={() => setShowDepositModal(true)} />
+          )}
         <View className="px-6 py-3 bg-white/5 rounded-xl border border-white/10">
           <Text className="text-sm text-gray-300 font-medium">Jogos Disponíveis</Text>
         </View>
@@ -57,6 +68,11 @@ export function Header() {
         </Link>
       </View>
     </View>
+    <DepositModal
+      visible={showDepositModal}
+      onClose={() => setShowDepositModal(false)}
+    />
+    </>
   );
 }
 
