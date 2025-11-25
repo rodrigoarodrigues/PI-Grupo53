@@ -7,6 +7,7 @@ export interface UpdateGameProps {
   size?: string;
   multiplayer?: boolean;
   languages?: string;
+  price?: number | string;
 }
 
 export async function updateGame(gameId: number, game: UpdateGameProps) {

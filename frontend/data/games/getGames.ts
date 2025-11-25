@@ -11,27 +11,26 @@ export interface GetGameProps {
   size?: string;
   multiplayer?: boolean;
   languages?: string;
+  price?: number; // ⭐ Adicionado campo price
 }
 
 export function getGames() {
-  const { isPending, error, data, isFetching, refetch } = useQuery({
+  const { isPending, error, data, isFetching } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
-      try {
-        const response = await fetch('http://localhost:3000/games');
-        if (!response.ok) {
-          if (response.status === 404) {
-            return [];
-          }
-          throw new Error('Erro ao buscar jogos');
-        }
-        const result = await response.json();
-        return Array.isArray(result) ? result : [];
-      } catch (error) {
-        return [];
+      const response = await fetch('http://localhost:3000/games');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar jogos');
       }
+      const games: GetGameProps[] = await response.json();
+      
+      // Garantir que price seja sempre number
+      return games.map(game => ({
+        ...game,
+        price: typeof game.price === 'string' ? parseFloat(game.price) : (game.price || 0)
+      }));
     },
-    staleTime: 2 * 60 * 1000, // 2 minutos - jogos mudam com menos frequência
+    staleTime: 2 * 60 * 1000, // 2 minutos
     gcTime: 5 * 60 * 1000, // 5 minutos de cache
   });
   return {
@@ -39,6 +38,5 @@ export function getGames() {
     error,
     data,
     isFetching,
-    refetch,
   };
 }

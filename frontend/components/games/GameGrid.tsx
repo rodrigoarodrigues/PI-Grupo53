@@ -16,10 +16,19 @@ interface GameGridProps {
 
 export function GameGrid({ games, isLibrary = false, activeRents = [], onRentReturned, showDeleteButton = false, onGameDeleted }: GameGridProps) {
   const { width } = useWindowDimensions();
-  const padding = 32; // px-8 = 32px
-  const gap = 16; // Reduzido para 16px
-  const cardWidth = (width - padding * 2 - gap * 3) / 4; // 4 colunas com gaps
-  const maxCardWidth = 200; // Limite máximo reduzido para 200px
+  
+  // Detectar se é mobile
+  const isMobile = width < 768;
+  
+  // Configuração responsiva
+  const padding = isMobile ? 16 : 32;
+  const gap = isMobile ? 12 : 16;
+  const columns = isMobile ? 2 : 4;
+  
+  // Calcular largura do card
+  const availableWidth = width - padding * 2;
+  const cardWidth = (availableWidth - gap * (columns - 1)) / columns;
+  const maxCardWidth = isMobile ? 170 : 200;
   const finalCardWidth = Math.min(cardWidth, maxCardWidth);
 
   // Função para encontrar o rentId de um jogo
@@ -31,8 +40,17 @@ export function GameGrid({ games, isLibrary = false, activeRents = [], onRentRet
   };
 
   return (
-    <View className="px-8 mt-4">
-      <View className="flex-row flex-wrap" style={{ marginHorizontal: -gap / 2 }}>
+    <View style={{ 
+      paddingHorizontal: padding, 
+      marginTop: isMobile ? 8 : 16,
+    }}>
+      <View 
+        style={{ 
+          flexDirection: 'row', 
+          flexWrap: 'wrap',
+          justifyContent: isMobile ? 'center' : 'flex-start',
+          marginHorizontal: -gap / 2, // Compensa o espaçamento lateral
+        }}>
         {games.map((game) => {
           const rentId = isLibrary ? getRentIdForGame(game.id) : null;
           
@@ -60,7 +78,11 @@ export function GameGrid({ games, isLibrary = false, activeRents = [], onRentRet
 
       {games.length === 0 && (
         <View className="items-center justify-center py-12">
-          <Text className="text-gray-400 text-lg">Nenhum jogo encontrado</Text>
+          <Text 
+            className="text-gray-400"
+            style={{ fontSize: isMobile ? 15 : 18 }}>
+            Nenhum jogo encontrado
+          </Text>
         </View>
       )}
     </View>

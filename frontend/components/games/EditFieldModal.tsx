@@ -10,7 +10,7 @@ import { XIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GetGameProps } from '@/data/games/getGameFromId';
 
-type FieldType = 'title' | 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages';
+type FieldType = 'title' | 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages' | 'price';
 
 interface EditFieldModalProps {
   visible: boolean;
@@ -46,6 +46,8 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
         setValue(game.multiplayer ? 'true' : 'false');
       } else if (field === 'title') {
         setValue(game.title || '');
+      } else if (field === 'price') {
+        setValue(game.price !== undefined && game.price !== null ? String(game.price) : '');
       } else {
         setValue((game[field] as string) || '');
       }
@@ -67,9 +69,22 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
 
     try {
       const updateData: UpdateGameProps = {};
-      
+
       if (field === 'multiplayer') {
         updateData.multiplayer = value === 'true';
+      } else if (field === 'price') {
+        // Accept both comma and dot as decimal separator, convert to dot for JS
+        const normalized = value.replace(',', '.');
+        const parsed = Number(normalized);
+        if (isNaN(parsed) || parsed < 0) {
+          Alert.alert(
+            'Erro',
+            'Digite um preço válido (número positivo, use vírgula ou ponto para decimais)'
+          );
+          setIsSubmitting(false);
+          return;
+        }
+        updateData.price = parsed;
       } else {
         (updateData as any)[field] = value;
       }
@@ -94,28 +109,21 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
   }
 
   const isSelectField = field === 'platform' || field === 'multiplayer';
+  const isPriceField = field === 'price';
   const options = field === 'platform' ? platformOptions : multiplayerOptions;
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}>
-      <View className="flex-1 bg-black/70 items-center justify-center p-4">
-        <View className="w-full max-w-md bg-[#0a0c10] rounded-2xl border border-white/10 shadow-2xl">
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
+      <View className="flex-1 items-center justify-center bg-black/70 p-4">
+        <View className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0a0c10] shadow-2xl">
           <LinearGradient
             colors={['#6b8bff', '#bc7cff']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             className="rounded-t-2xl p-6">
             <View className="flex-row items-center justify-between">
-              <Text className="text-xl font-bold text-white">
-                Editar {fieldLabel}
-              </Text>
-              <Pressable
-                onPress={onClose}
-                className="bg-white/20 rounded-full p-2">
+              <Text className="text-xl font-bold text-white">Editar {fieldLabel}</Text>
+              <Pressable onPress={onClose} className="rounded-full bg-white/20 p-2">
                 <XIcon size={20} color="#fff" />
               </Pressable>
             </View>
@@ -123,7 +131,7 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
 
           <View className="p-6">
             <View className="mb-6">
-              <Text className="text-white font-semibold mb-3">{fieldLabel}</Text>
+              <Text className="mb-3 font-semibold text-white">{fieldLabel}</Text>
               {isSelectField ? (
                 <Select
                   options={options}
@@ -131,17 +139,38 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
                   onValueChange={setValue}
                   placeholder={`Selecione ${fieldLabel.toLowerCase()}`}
                 />
+              ) : isPriceField ? (
+                <Input
+                  value={value}
+                  onChangeText={(text) => {
+                    // Allow only digits and one comma or dot for decimals, and convert comma to dot
+                    let sanitized = text.replace(/[^0-9.,]/g, '');
+                    // Replace multiple commas/dots with a single dot
+                    sanitized = sanitized.replace(/,/g, '.');
+                    const parts = sanitized.split('.');
+                    if (parts.length > 2) {
+                      sanitized = parts[0] + '.' + parts.slice(1).join('');
+                    }
+                    setValue(sanitized);
+                  }}
+                  placeholder="Ex: 59,99"
+                  keyboardType="decimal-pad"
+                  className="border-white/10 bg-white/5 text-white"
+                />
               ) : (
                 <Input
                   value={value}
                   onChangeText={setValue}
                   placeholder={
-                    field === 'title' ? 'Digite o título do jogo' :
-                    field === 'imageUrl' ? 'https://exemplo.com/imagem.jpg' :
-                    field === 'languages' ? 'Ex: PT BR, EN, ES' :
-                    'Ex: 48 GB'
+                    field === 'title'
+                      ? 'Digite o título do jogo'
+                      : field === 'imageUrl'
+                        ? 'https://exemplo.com/imagem.jpg'
+                        : field === 'languages'
+                          ? 'Ex: PT BR, EN, ES'
+                          : 'Ex: 48 GB'
                   }
-                  className="bg-white/5 border-white/10 text-white"
+                  className="border-white/10 bg-white/5 text-white"
                   multiline={field === 'languages'}
                 />
               )}
@@ -155,14 +184,11 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
                 disabled={isSubmitting}>
                 <Text>Cancelar</Text>
               </Button>
-              <Button
-                onPress={handleSubmit}
-                className="flex-1"
-                disabled={isSubmitting}>
+              <Button onPress={handleSubmit} className="flex-1" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white font-semibold">Salvar</Text>
+                  <Text className="font-semibold text-white">Salvar</Text>
                 )}
               </Button>
             </View>
@@ -172,4 +198,3 @@ export function EditFieldModal({ visible, onClose, game, field, fieldLabel }: Ed
     </Modal>
   );
 }
-

@@ -11,6 +11,7 @@ export interface GetGameProps {
   size?: string;
   multiplayer?: boolean;
   languages?: string;
+  price?: number; // ⭐ Adicionado campo price
 }
 
 export function getGameFromId(id: string) {
@@ -19,7 +20,14 @@ export function getGameFromId(id: string) {
     queryFn: async () => {
       const response = await fetch('http://localhost:3000/games');
       const games = await response.json();
-      return games.find((game: GetGameProps) => game.uuid === id || String(game.id) === String(id));
+      const game = games.find((game: GetGameProps) => game.uuid === id || String(game.id) === String(id));
+      
+      // Garantir que price seja sempre number
+      if (game && game.price) {
+        game.price = typeof game.price === 'string' ? parseFloat(game.price) : game.price;
+      }
+      
+      return game;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutos - detalhes de jogo mudam raramente

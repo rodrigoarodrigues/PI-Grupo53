@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui/text';
 import { Stack, useLocalSearchParams, useRouter, Redirect } from 'expo-router';
-import { View, Image, ActivityIndicator, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Image, ActivityIndicator, ScrollView, Pressable, TextInput, useWindowDimensions } from 'react-native';
 import { getGameFromId } from '@/data/games/getGameFromId';
 import { GameDetailsHeader } from '@/components/games/GameDetailsHeader';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,7 +12,9 @@ import {
   ArrowLeftIcon,
   EditIcon,
   CheckIcon,
-  XIcon
+  XIcon,
+  MenuIcon,
+  DollarSignIcon
 } from 'lucide-react-native';
 import { EditFieldModal } from '@/components/games/EditFieldModal';
 import { SubscriptionModal } from '@/components/games/SubscriptionModal';
@@ -28,6 +30,7 @@ import { getActiveRents } from '@/data/rents/getActiveRents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AlertService } from '@/services/AlertService';
 import { PurchaseConfirmModal } from '@/components/wallet/PurchaseConfirmModal';
+import { DrawerNav } from '@/components/layout/DrawerNav';
 
 export default function GameDetailsScreen() {
   const { uuid } = useLocalSearchParams();
@@ -37,13 +40,18 @@ export default function GameDetailsScreen() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState('');
   const [isSavingDescription, setIsSavingDescription] = useState(false);
-  const [editField, setEditField] = useState<'title' | 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages' | null>(null);
+  const [editField, setEditField] = useState<'title' | 'imageUrl' | 'platform' | 'size' | 'multiplayer' | 'languages' | 'price' | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [hasChosenSubscription, setHasChosenSubscription] = useState(false);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const createRentMutation = useCreateRent();
   const queryClient = useQueryClient();
   const { updateWallet, refreshWallet } = useAuth();
+
+  // Detectar se é mobile
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   // Verificar se é o primeiro acesso (apenas para clientes)
   useEffect(() => {
@@ -65,22 +73,18 @@ export default function GameDetailsScreen() {
         const chosen = await storage.getItem(subscriptionKey);
         
         if (!chosen) {
-          // Primeiro acesso - mostrar modal (mas não forçar escolha)
           setShowSubscriptionModal(true);
         } else {
-          // Já escolheu - carregar escolha
           const subscriptionData = JSON.parse(chosen);
           if (subscriptionData.type === 'assinatura_full') {
             setRentalType('assinatura_full');
             setHasChosenSubscription(true);
           } else {
-            // Sem assinatura (ou plano antigo removido)
             setRentalType(null);
             setHasChosenSubscription(true);
           }
         }
       } catch (error) {
-        // Em caso de erro, mostrar modal
         setShowSubscriptionModal(true);
       }
     };
@@ -95,7 +99,6 @@ export default function GameDetailsScreen() {
     setShowSubscriptionModal(false);
     setHasChosenSubscription(true);
 
-    // Salvar escolha
     try {
       const storage = Platform.OS === 'web' && typeof window !== 'undefined' && 'localStorage' in window
         ? {
@@ -108,7 +111,6 @@ export default function GameDetailsScreen() {
       const subscriptionKey = `subscription_chosen_${user?.id}`;
       await storage.setItem(subscriptionKey, JSON.stringify({ type, date: new Date().toISOString() }));
 
-      // Mostrar mensagem de sucesso para plano Full
       AlertService.success(
         '🎉 Assinatura Full Ativada!',
         'Assinado com sucesso! Você tem direito a 3 jogos grátis do catálogo!'
@@ -122,11 +124,9 @@ export default function GameDetailsScreen() {
   const game = Array.isArray(data) ? data?.[0] : data;
   const gameId = game?.id ? (typeof game.id === 'string' ? Number(game.id) : game.id) : 0;
 
-  // Buscar aluguéis ativos do usuário (para assinatura)
   const { data: activeRents } = getActiveRents(user?.id);
   const subscriptionRents = activeRents?.filter(rent => rent.rentalType === 'assinatura') || [];
   
-  // Contar jogos grátis resgatados (apenas para Assinatura Full)
   const freeGamesCount = rentalType === 'assinatura_full' ? subscriptionRents.length : 0;
   const canRescueFreeGame = rentalType === 'assinatura_full' && freeGamesCount < 3;
   const hasSubscription = rentalType === 'assinatura_full';
@@ -137,39 +137,26 @@ export default function GameDetailsScreen() {
   const gameMultiplayer = game?.multiplayer ? 'Sim' : 'Não';
   const gameLanguages = game?.languages || 'N/A';
 
-  // Calcular preço do aluguel - DEVE SER ANTES DOS EARLY RETURNS
-  const basePrice = 10.0; // Preço base do jogo
-  const subscriptionMonthlyPrice = 50.0; // Preço da assinatura mensal
+  const basePrice = 10.0;
+  const subscriptionMonthlyPrice = 50.0;
   
   const gamePrice = parseFloat(game?.price?.toString() || "0.00");
 
   const rentalPrice = useMemo(() => {
     if (!game) return 0;
     
-    // ============================================
-    // LÓGICA PROFISSIONAL DE CÁLCULO DE PREÇO
-    // ============================================
-    // Prioridade: Preço do jogo cadastrado > Lógica de planos
-    
     if (gamePrice > 0) {
-      // JOGO COM PREÇO CADASTRADO
       if (rentalType === 'assinatura_full') {
-        // Assinatura Full: 3 primeiros jogos são grátis
         if (freeGamesCount < 3) {
-          // Ainda dentro dos 3 jogos grátis
           return 0;
         } else {
-          // Já usou os 3 jogos grátis - cobrar o preço do jogo
           return gamePrice;
         }
       } else {
-        // Sem assinatura: sempre cobra o preço do jogo
         return gamePrice;
       }
     } else {
-      // JOGO SEM PREÇO CADASTRADO - Usar lógica antiga
       if (rentalType === 'assinatura_full') {
-        // Assinatura Full: grátis até 3 jogos, depois paga valor cheio
         if (freeGamesCount >= 3) {
           return calculateRentalPrice({
             rentalType: 'unitario',
@@ -180,7 +167,6 @@ export default function GameDetailsScreen() {
           return 0;
         }
       } else {
-        // Sem assinatura: preço calculado baseado em dias
         return calculateRentalPrice({
           rentalType: 'unitario',
           basePrice,
@@ -198,7 +184,6 @@ export default function GameDetailsScreen() {
     }
   }, [isAuthenticated, authLoading, router]);
 
-  // Sincronizar tempDescription quando o jogo for atualizado e não estiver editando
   useEffect(() => {
     if (!isEditingDescription && game) {
       setTempDescription(gameDescription);
@@ -225,7 +210,6 @@ export default function GameDetailsScreen() {
       return;
     }
 
-    // Verificar se a descrição mudou
     if (tempDescription === gameDescription) {
       setIsEditingDescription(false);
       return;
@@ -238,7 +222,6 @@ export default function GameDetailsScreen() {
         description: tempDescription,
       });
 
-      // Invalidar queries para atualizar a UI
       queryClient.invalidateQueries({ queryKey: ['games'] });
       queryClient.invalidateQueries({ queryKey: ['games', uuid] });
 
@@ -247,7 +230,6 @@ export default function GameDetailsScreen() {
     } catch (error: any) {
       const errorMessage = error?.message || 'Erro ao atualizar descrição';
       AlertService.error('Erro', errorMessage);
-      // Reverter para a descrição original em caso de erro
       setTempDescription(gameDescription);
     } finally {
       setIsSavingDescription(false);
@@ -276,9 +258,6 @@ export default function GameDetailsScreen() {
     }
 
     const userId = user.id;
-
-    // Se houver valor a pagar (compra ou aluguel), mostrar modal de confirmação
-    // Verificar rentalPrice calculado para saber se precisa pagar
     const priceToPay = rentalPrice > 0 ? rentalPrice : (gamePrice > 0 ? gamePrice : 0);
     
     if (priceToPay > 0 && !isAdmin) {
@@ -286,7 +265,6 @@ export default function GameDetailsScreen() {
       return;
     }
 
-    // Admin: aluguel simplificado sem restrições
     if (isAdmin) {
       try {
         const result = await createRentMutation.mutateAsync({
@@ -324,13 +302,10 @@ export default function GameDetailsScreen() {
       return;
     }
 
-    // Cliente: lógica normal de assinatura (apenas para jogos sem preço/aluguel)
-    // Converter tipos de assinatura para o formato do backend
     let backendRentalType: 'unitario' | 'assinatura' = 'unitario';
     let backendDays: number | undefined = 30;
     
     if (rentalType === 'assinatura_full') {
-      // Assinatura Full: se já tem 3 jogos, paga unitário. Senão, é assinatura grátis
       if (freeGamesCount >= 3) {
         backendRentalType = 'unitario';
         backendDays = 30;
@@ -339,7 +314,6 @@ export default function GameDetailsScreen() {
         backendDays = undefined;
       }
     } else {
-      // Sem assinatura: sempre unitário (paga valor cheio)
       backendRentalType = 'unitario';
       backendDays = 30;
     }
@@ -356,7 +330,6 @@ export default function GameDetailsScreen() {
       });
 
       if (result.payment.success) {
-        // Atualizar saldo se houve cobrança
         if (result.price > 0) {
           const newBalance = (user.wallet || 0) - result.price;
           updateWallet(newBalance);
@@ -391,12 +364,10 @@ export default function GameDetailsScreen() {
 
     const userId = user.id;
 
-    // Converter tipos de assinatura para o formato do backend
     let backendRentalType: 'unitario' | 'assinatura' = 'unitario';
     let backendDays: number | undefined = 30;
     
     if (rentalType === 'assinatura_full') {
-      // Assinatura Full: se já tem 3 jogos, paga unitário. Senão, é assinatura grátis
       if (freeGamesCount >= 3) {
         backendRentalType = 'unitario';
         backendDays = 30;
@@ -405,7 +376,6 @@ export default function GameDetailsScreen() {
         backendDays = undefined;
       }
     } else {
-      // Sem assinatura: sempre unitário (paga valor cheio)
       backendRentalType = 'unitario';
       backendDays = 30;
     }
@@ -422,20 +392,15 @@ export default function GameDetailsScreen() {
       });
 
       if (result.payment.success) {
-        // Atualizar saldo usando o valor retornado pelo backend (mais confiável)
-        // O backend retorna newBalance que é o saldo atualizado após a subtração
         if (result.newBalance !== undefined) {
           updateWallet(result.newBalance);
         } else if (result.price > 0) {
-          // Fallback: calcular localmente se o backend não retornar o novo saldo
           const newBalance = (user.wallet || 0) - result.price;
           updateWallet(newBalance);
         }
         
-        // Buscar saldo atualizado do servidor para garantir sincronização total
         await refreshWallet();
         
-        // Invalidar e atualizar queries de aluguéis e carteira
         queryClient.invalidateQueries({ queryKey: ['rents'] });
         queryClient.invalidateQueries({ queryKey: ['rents', 'active'] });
         queryClient.invalidateQueries({ queryKey: ['wallet', user.id] });
@@ -444,7 +409,6 @@ export default function GameDetailsScreen() {
         
         await queryClient.refetchQueries({ queryKey: ['rents', 'active', user.id] });
         
-        // Mensagem de sucesso com informações detalhadas do backend
         const finalBalance = result.newBalance !== undefined 
           ? result.newBalance 
           : (result.price > 0 ? (user.wallet || 0) - result.price : user.wallet || 0);
@@ -453,7 +417,6 @@ export default function GameDetailsScreen() {
           ? `O jogo "${game.title}" foi adicionado à sua biblioteca!\n\n💰 Preço pago: R$ ${result.price.toFixed(2)}\n💳 Novo saldo: R$ ${finalBalance.toFixed(2)}`
           : `O jogo "${game.title}" foi adicionado à sua biblioteca!\n\n🎁 Jogo grátis!`;
         
-        // Fechar modal após sucesso
         setShowPurchaseModal(false);
         
         AlertService.success(
@@ -468,7 +431,6 @@ export default function GameDetailsScreen() {
         );
       }
     } catch (error: any) {
-      // Em caso de erro, manter o modal aberto para o usuário ver o problema
       if (error.message?.includes('Saldo insuficiente')) {
         AlertService.error('Saldo insuficiente', error.message);
       } else {
@@ -492,16 +454,53 @@ export default function GameDetailsScreen() {
           headerShown: false,
         }}
       />
+      
+      {/* DrawerNav para mobile */}
+      {isMobile && (
+        <DrawerNav 
+          isOpen={isDrawerOpen} 
+          onClose={() => setIsDrawerOpen(false)} 
+        />
+      )}
+      
       <LinearGradient
         colors={['#142235', '#0a0c10']}
         start={{ x: 0.5, y: 0.2 }}
         end={{ x: 0.5, y: 1 }}
         className="flex-1">
+        
+        {/* Menu Hamburguer - Mobile apenas */}
+        {isMobile && (
+          <View 
+            style={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              zIndex: 20,
+            }}>
+            <Pressable
+              onPress={() => setIsDrawerOpen(true)}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 8,
+                padding: 10,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+              }}>
+              <MenuIcon size={24} color="#fff" />
+            </Pressable>
+          </View>
+        )}
+        
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}>
-          <View className="px-8 pt-6 pb-2">
+          <View style={{ 
+            paddingHorizontal: isMobile ? 16 : 32, 
+            paddingTop: isMobile ? 70 : 24,
+            paddingBottom: 8 
+          }}>
             <Pressable
               onPress={() => router.push('/catalog')}
               className="flex-row items-center gap-2">
@@ -529,11 +528,17 @@ export default function GameDetailsScreen() {
           )}
 
           {game && (
-            <View className="px-8 mt-4">
-              <View className="flex-row gap-8 mb-8" style={{ alignItems: 'flex-start' }}>
-                {/* Coluna Esquerda: Imagem */}
-                <View style={{ width: 280, minWidth: 280 }}>
-                  <View className="relative rounded-xl overflow-hidden bg-white/5" style={{ height: 480 }}>
+            <View style={{ paddingHorizontal: isMobile ? 16 : 32, marginTop: 16 }}>
+              {/* Layout responsivo: coluna em mobile, lado a lado em desktop */}
+              <View style={{ 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 20 : 32, 
+                marginBottom: 32,
+                alignItems: isMobile ? 'center' : 'flex-start'
+              }}>
+                {/* Imagem do Jogo */}
+                <View style={{ width: isMobile ? '100%' : 280, maxWidth: isMobile ? 400 : 280 }}>
+                  <View className="relative rounded-xl overflow-hidden bg-white/5" style={{ height: isMobile ? 520 : 480 }}>
                     {game.imageUrl ? (
                       <Image
                         source={{ uri: game.imageUrl }}
@@ -555,13 +560,12 @@ export default function GameDetailsScreen() {
                   </View>
                 </View>
 
-                {/* Coluna Direita: Informações do Jogo e Seção de Aluguel */}
-                <View className="flex-1" style={{ minWidth: 400 }}>
-                  {/* Informações do Jogo */}
+                {/* Informações e Aluguel */}
+                <View className="flex-1" style={{ minWidth: isMobile ? '100%' : 400, width: isMobile ? '100%' : 'auto' }}>
+                  {/* Título */}
                   <View className="mb-4">
                     <View className="flex-row items-start" style={{ gap: 8 }}>
                       <Text
-                        className="text-5xl font-extrabold"
                         style={{
                           color: '#bc7cff',
                           textShadowColor: '#6b8bff',
@@ -569,6 +573,8 @@ export default function GameDetailsScreen() {
                           textShadowRadius: 20,
                           letterSpacing: 1,
                           flexShrink: 1,
+                          fontSize: isMobile ? 28 : 48,
+                          fontWeight: '800',
                         }}>
                         {game.title}
                       </Text>
@@ -590,7 +596,8 @@ export default function GameDetailsScreen() {
                     </View>
                   </View>
 
-                  <View className="flex-row gap-6 mb-6">
+                  {/* Quantidade, Plataforma e Preço */}
+                  <View className="flex-row flex-wrap gap-4 mb-6">
                     <View className="flex-row items-center gap-2">
                       <PackageIcon size={20} color="#9ca3af" />
                       <Text className="text-white font-medium">{game.quantity} unid.</Text>
@@ -599,11 +606,31 @@ export default function GameDetailsScreen() {
                       <PlayStationLogo size={20} />
                       <Text className="text-white font-medium">{gamePlatform}</Text>
                     </View>
+                    {/* Preço com Botão de Edição */}
+                    <View className="flex-row items-center gap-2">
+                      <DollarSignIcon size={20} color="#10b981" />
+                      <Text className="text-green-400 font-bold">
+                        R$ {gamePrice.toFixed(2)}
+                      </Text>
+                      {isAdmin && (
+                        <Pressable
+                          onPress={() => setEditField('price')}
+                          className="bg-white/5 border border-white/10 rounded-full"
+                          style={{ 
+                            width: 24,
+                            height: 24,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                          <EditIcon size={12} color="#ffffff" />
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
 
                   {/* Seção de Aluguel */}
                   {canRent && (
-                    <View style={{ width: 380, minWidth: 380 }}>
+                    <View style={{ width: '100%', maxWidth: isMobile ? '100%' : 380 }}>
                       <View className="bg-white/5 border border-white/10 rounded-xl p-4">
                         <Text className="text-lg font-semibold text-white mb-4">
                           {isAdmin ? 'Adicionar à Biblioteca' : gamePrice > 0 ? 'Alugar/Comprar Jogo' : 'Alugar Jogo'}
@@ -787,7 +814,6 @@ export default function GameDetailsScreen() {
                               </Pressable>
                             )}
 
-                            {/* Preço Calculado */}
                             <View className="bg-white/5 border border-white/10 rounded-lg p-3 mb-4">
                               <View className="flex-row items-center justify-between">
                                 <Text className="text-sm text-gray-300 font-medium">Preço Total</Text>
@@ -812,7 +838,6 @@ export default function GameDetailsScreen() {
                             )}
                             </View>
 
-                            {/* Botão de Alugar/Resgatar */}
                             <Pressable
                               onPress={handleRent}
                               disabled={createRentMutation.isPending}
@@ -852,9 +877,10 @@ export default function GameDetailsScreen() {
                 </View>
               </View>
 
-              <View className="mb-8" style={{ maxWidth: 1000 }}>
+              {/* Descrição */}
+              <View className="mb-8" style={{ maxWidth: isMobile ? '100%' : 1000 }}>
                 <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-2xl font-semibold text-white">Descrição</Text>
+                  <Text style={{ fontSize: isMobile ? 20 : 24, fontWeight: '600', color: '#fff' }}>Descrição</Text>
                   {isAdmin && (
                     <>
                       {!isEditingDescription ? (
@@ -920,10 +946,31 @@ export default function GameDetailsScreen() {
                 </View>
               </View>
 
-              <View className="mb-8" style={{ maxWidth: 1000 }}>
-                <Text className="text-2xl font-semibold text-white mb-4">Informações</Text>
-                <View className="flex-row flex-wrap gap-3">
-                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: 160 }}>
+              {/* Informações */}
+              <View className="mb-8" style={{ maxWidth: isMobile ? '100%' : 1000 }}>
+                <Text style={{ fontSize: isMobile ? 20 : 24, fontWeight: '600', color: '#fff', marginBottom: 16 }}>Informações</Text>
+                <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+                  {/* Card de Preço */}
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: isMobile ? '48%' : 160 }}>
+                    <View className="flex-row items-center justify-between mb-1.5">
+                      <Text className="text-xs text-gray-400">Preço</Text>
+                      {isAdmin && (
+                        <Pressable
+                          onPress={() => setEditField('price')}
+                          className="p-1">
+                          <EditIcon size={14} color="#9ca3af" />
+                        </Pressable>
+                      )}
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                      <DollarSignIcon size={18} color="#10b981" />
+                      <Text className="text-white font-semibold text-base">
+                        R$ {gamePrice.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: isMobile ? '48%' : 160 }}>
                     <View className="flex-row items-center justify-between mb-1.5">
                       <Text className="text-xs text-gray-400">Plataforma</Text>
                       {isAdmin && (
@@ -940,7 +987,7 @@ export default function GameDetailsScreen() {
                     </View>
                   </View>
 
-                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: 160 }}>
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: isMobile ? '48%' : 160 }}>
                     <View className="flex-row items-center justify-between mb-1.5">
                       <Text className="text-xs text-gray-400">Tamanho</Text>
                       {isAdmin && (
@@ -957,7 +1004,7 @@ export default function GameDetailsScreen() {
                     </View>
                   </View>
 
-                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: 160 }}>
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: isMobile ? '48%' : 160 }}>
                     <View className="flex-row items-center justify-between mb-1.5">
                       <Text className="text-xs text-gray-400">Multiplayer</Text>
                       {isAdmin && (
@@ -974,7 +1021,7 @@ export default function GameDetailsScreen() {
                     </View>
                   </View>
 
-                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: 160 }}>
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3" style={{ flex: 1, minWidth: isMobile ? '48%' : 160 }}>
                     <View className="flex-row items-center justify-between mb-1.5">
                       <Text className="text-xs text-gray-400">Idiomas</Text>
                       {isAdmin && (
@@ -1007,7 +1054,8 @@ export default function GameDetailsScreen() {
               editField === 'platform' ? 'Plataforma' :
               editField === 'size' ? 'Tamanho' :
               editField === 'multiplayer' ? 'Multiplayer' :
-              'Idiomas'
+              editField === 'languages' ? 'Idiomas' :
+              'Preço'
             }
           />
         )}
@@ -1018,11 +1066,9 @@ export default function GameDetailsScreen() {
               handleSubscriptionSelect(type);
             }}
             onClose={() => {
-              // Se fechar sem escolher, deixar sem assinatura (paga valor cheio)
               if (!hasChosenSubscription) {
                 setRentalType(null);
                 setHasChosenSubscription(true);
-                // Salvar escolha de não ter assinatura
                 const storage = Platform.OS === 'web' && typeof window !== 'undefined' && 'localStorage' in window
                   ? {
                       setItem: (key: string, value: string) => Promise.resolve(window.localStorage.setItem(key, value)),
