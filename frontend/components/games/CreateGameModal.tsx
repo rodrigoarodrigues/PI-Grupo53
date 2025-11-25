@@ -1,16 +1,24 @@
-import { Modal, View, ScrollView, Pressable, Alert, ActivityIndicator, TextInput } from 'react-native';
+import {
+  Modal,
+  View,
+  ScrollView,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SelectOption } from '@/components/ui/select';
 import { useState } from 'react';
 import { createGame, CreateGameProps } from '@/data/games/createGame';
 import { useQueryClient } from '@tanstack/react-query';
-import { 
-  XIcon, 
-  Gamepad2Icon, 
-  ImageIcon, 
+import {
+  XIcon,
+  Gamepad2Icon,
+  ImageIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  UsersIcon
+  UsersIcon,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -48,7 +56,6 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
     { value: 'PC', label: 'PC' },
     { value: 'NINTENDO', label: 'Nintendo Switch' },
     { value: 'MultiPlataforma', label: 'MultiPlataforma' },
-
   ];
 
   const multiplayerOptions: SelectOption[] = [
@@ -63,9 +70,9 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
   ];
 
   const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   };
@@ -128,13 +135,9 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}>
-      <View className="flex-1 bg-black/70 items-center justify-center p-4">
-        <View className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl max-h-[90%]">
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
+      <View className="flex-1 items-center justify-center bg-black/70 p-4">
+        <View className="max-h-[90%] w-full max-w-2xl overflow-hidden rounded-2xl shadow-2xl">
           {/* Borda gradiente externa */}
           <LinearGradient
             colors={['#6b8bff', '#bc7cff']}
@@ -144,262 +147,239 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
               padding: 2,
               borderRadius: 16,
             }}>
-            <View className="bg-[#0a0c10] rounded-xl">
-            {/* Header */}
-            <View className="px-6 pt-6 pb-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-2xl font-bold text-white">
-                  Novo Jogo
-                </Text>
-                <Pressable
-                  onPress={onClose}
-                  className="bg-white/10 rounded-full p-2">
-                  <XIcon size={20} color="#fff" />
-                </Pressable>
-              </View>
-            </View>
-
-            <ScrollView
-              className="flex-1 px-6"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 24 }}>
-              
-              {/* Título do Jogo */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  Titulo do Jogo <Text className="text-red-400">*</Text>
-                </Text>
-                <View className="flex-row items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <Gamepad2Icon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
-                  <TextInput
-                    value={formData.title}
-                    onChangeText={(text) => setFormData({ ...formData, title: text })}
-                    placeholder="Digite o titulo do jogo"
-                    placeholderTextColor="#9ca3af"
-                    className="flex-1 text-white text-base"
-                    style={{ color: '#fff' }}
-                  />
+            <View className="rounded-xl bg-[#0a0c10]">
+              {/* Header */}
+              <View className="px-6 pb-4 pt-6">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-2xl font-bold text-white">Novo Jogo</Text>
+                  <Pressable onPress={onClose} className="rounded-full bg-white/10 p-2">
+                    <XIcon size={20} color="#fff" />
+                  </Pressable>
                 </View>
               </View>
 
-              {/* URL da Imagem */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  URL da Imagem <Text className="text-red-400">*</Text>
-                </Text>
-                <View className="flex-row items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <ImageIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
-                  <TextInput
-                    value={formData.imageUrl}
-                    onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                    placeholderTextColor="#9ca3af"
-                    className="flex-1 text-white text-base"
-                    style={{ color: '#fff' }}
-                  />
-                </View>
-              </View>
-
-              {/* Descrição */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  Descrição
-                </Text>
-                <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <TextInput
-                    value={formData.description}
-                    onChangeText={(text) => setFormData({ ...formData, description: text })}
-                    placeholder="Digite a descrição do jogo"
-                    placeholderTextColor="#9ca3af"
-                    multiline
-                    numberOfLines={4}
-                    className="text-white text-base"
-                    style={{ 
-                      color: '#fff', 
-                      textAlignVertical: 'top',
-                      minHeight: 80,
-                    }}
-                  />
-                </View>
-              </View>
-
-              {/* Plataforma */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  Plataforma
-                </Text>
-                <Pressable
-                  onPress={() => setShowPlatformModal(true)}
-                  className="flex-row items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <View className="flex-row items-center flex-1">
-                    <Gamepad2Icon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
-                    <Text className={formData.platform ? 'text-white' : 'text-gray-400'}>
-                      {formData.platform 
-                        ? platformOptions.find(p => p.value === formData.platform)?.label 
-                        : 'Selecione a plataforma'}
-                    </Text>
-                  </View>
-                  <ChevronRightIcon size={20} color="#9ca3af" />
-                </Pressable>
-              </View>
-
-              {/* Tamanho e Idioma - Dois campos lado a lado */}
-              <View className="mb-4">
-                <View className="flex-row gap-3">
-                  {/* Campo esquerdo - Tamanho */}
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold mb-2 text-sm">
-                      Tamanho
-                    </Text>
-                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <TextInput
-                        value={formData.size}
-                        onChangeText={(text) => setFormData({ ...formData, size: text })}
-                        placeholder="Ex: 50 GB"
-                        placeholderTextColor="#9ca3af"
-                        className="text-white text-base"
-                        style={{ color: '#fff' }}
-                      />
-                    </View>
-                  </View>
-                  
-                  {/* Campo direito - Idioma */}
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold mb-2 text-sm">
-                      Idioma
-                    </Text>
-                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <TextInput
-                        value={formData.languages}
-                        onChangeText={(text) => setFormData({ ...formData, languages: text })}
-                        placeholder="Ex: PT-BR, EN"
-                        placeholderTextColor="#9ca3af"
-                        className="text-white text-base"
-                        style={{ color: '#fff' }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Multiplayer - Dois campos lado a lado */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold mb-2 text-sm">
-                  Multiplayer
-                </Text>
-                <View className="flex-row gap-3">
-                  {/* Campo esquerdo - Sim/Não */}
-                  <View className="flex-1">
-                    <Pressable
-                      onPress={() => setShowMultiplayerModal(true)}
-                      className="flex-row items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <UsersIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
-                      <Text className="text-white">
-                        {formData.multiplayer ? 'Sim' : 'Não'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                  
-                  {/* Campo direito - Tipo (Ex: COOP) */}
-                  <View className="flex-1">
-                    <Pressable
-                      onPress={() => setShowMultiplayerTypeModal(true)}
-                      className="flex-row items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <Text className={multiplayerType ? 'text-white' : 'text-gray-400'}>
-                        {multiplayerType || 'Ex: COOP'}
-                      </Text>
-                      <ChevronDownIcon size={20} color="#9ca3af" />
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-
-              {/* Quantidade e Preço - Dois campos lado a lado */}
-              <View className="mb-4">
-                <View className="flex-row gap-3">
-                  {/* Campo esquerdo - Quantidade */}
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold mb-2 text-sm">
-                      Quantidade <Text className="text-red-400">*</Text>
-                    </Text>
-                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <TextInput
-                        value={formData.quantity.toString()}
-                        onChangeText={(text) => {
-                          const num = parseInt(text) || 0;
-                          setFormData({ ...formData, quantity: num });
-                        }}
-                        placeholder="0"
-                        placeholderTextColor="#9ca3af"
-                        keyboardType="numeric"
-                        className="text-white text-base"
-                        style={{ color: '#fff' }}
-                      />
-                    </View>
-                  </View>
-                  
-                  {/* Campo direito - Preço */}
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold mb-2 text-sm">
-                      Preço (R$)
-                    </Text>
-                    <View className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      <TextInput
-                        value={formData.price?.toString() || '0'}
-                        onChangeText={(text) => {
-                          const num = parseFloat(text.replace(',', '.')) || 0;
-                          setFormData({ ...formData, price: num });
-                        }}
-                        placeholder="0,00"
-                        placeholderTextColor="#9ca3af"
-                        keyboardType="decimal-pad"
-                        className="text-white text-base"
-                        style={{ color: '#fff' }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Botões */}
-              <View className="flex-row gap-3 mt-2">
-                <Pressable
-                  onPress={onClose}
-                  disabled={isSubmitting}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3.5">
-                  <Text className="text-center text-white font-semibold">
-                    Cancelar
+              <ScrollView
+                className="max-h-[70vh] px-6"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 24 }}>
+                {/* Título do Jogo */}
+                <View className="mb-4">
+                  <Text className="mb-2 text-sm font-semibold text-white">
+                    Titulo do Jogo <Text className="text-red-400">*</Text>
                   </Text>
-                </Pressable>
-                
-                <Pressable
-                  onPress={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-xl py-3.5 overflow-hidden">
-                  <LinearGradient
-                    colors={['#6b8bff', '#bc7cff']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}>
-                    {isSubmitting ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text className="text-center text-white font-semibold">
-                        Cadastrar
+                  <View className="flex-row items-center rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <Gamepad2Icon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                    <TextInput
+                      value={formData.title}
+                      onChangeText={(text) => setFormData({ ...formData, title: text })}
+                      placeholder="Digite o titulo do jogo"
+                      placeholderTextColor="#9ca3af"
+                      className="flex-1 text-base text-white"
+                      style={{ color: '#fff' }}
+                    />
+                  </View>
+                </View>
+
+                {/* URL da Imagem */}
+                <View className="mb-4">
+                  <Text className="mb-2 text-sm font-semibold text-white">
+                    URL da Imagem <Text className="text-red-400">*</Text>
+                  </Text>
+                  <View className="flex-row items-center rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <ImageIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                    <TextInput
+                      value={formData.imageUrl}
+                      onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                      placeholderTextColor="#9ca3af"
+                      className="flex-1 text-base text-white"
+                      style={{ color: '#fff' }}
+                    />
+                  </View>
+                </View>
+
+                {/* Descrição */}
+                <View className="mb-4">
+                  <Text className="mb-2 text-sm font-semibold text-white">Descrição</Text>
+                  <View className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <TextInput
+                      value={formData.description}
+                      onChangeText={(text) => setFormData({ ...formData, description: text })}
+                      placeholder="Digite a descrição do jogo"
+                      placeholderTextColor="#9ca3af"
+                      multiline
+                      numberOfLines={4}
+                      className="text-base text-white"
+                      style={{
+                        color: '#fff',
+                        textAlignVertical: 'top',
+                        minHeight: 80,
+                      }}
+                    />
+                  </View>
+                </View>
+
+                {/* Plataforma */}
+                <View className="mb-4">
+                  <Text className="mb-2 text-sm font-semibold text-white">Plataforma</Text>
+                  <Pressable
+                    onPress={() => setShowPlatformModal(true)}
+                    className="flex-row items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <View className="flex-1 flex-row items-center">
+                      <Gamepad2Icon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                      <Text className={formData.platform ? 'text-white' : 'text-gray-400'}>
+                        {formData.platform
+                          ? platformOptions.find((p) => p.value === formData.platform)?.label
+                          : 'Selecione a plataforma'}
                       </Text>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              </View>
-            </ScrollView>
+                    </View>
+                    <ChevronRightIcon size={20} color="#9ca3af" />
+                  </Pressable>
+                </View>
+
+                {/* Tamanho e Idioma - Dois campos lado a lado */}
+                <View className="mb-4">
+                  <View className="flex-row gap-3">
+                    {/* Campo esquerdo - Tamanho */}
+                    <View className="flex-1">
+                      <Text className="mb-2 text-sm font-semibold text-white">Tamanho</Text>
+                      <View className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <TextInput
+                          value={formData.size}
+                          onChangeText={(text) => setFormData({ ...formData, size: text })}
+                          placeholder="Ex: 50 GB"
+                          placeholderTextColor="#9ca3af"
+                          className="text-base text-white"
+                          style={{ color: '#fff' }}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Campo direito - Idioma */}
+                    <View className="flex-1">
+                      <Text className="mb-2 text-sm font-semibold text-white">Idioma</Text>
+                      <View className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <TextInput
+                          value={formData.languages}
+                          onChangeText={(text) => setFormData({ ...formData, languages: text })}
+                          placeholder="Ex: PT-BR, EN"
+                          placeholderTextColor="#9ca3af"
+                          className="text-base text-white"
+                          style={{ color: '#fff' }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Multiplayer - Dois campos lado a lado */}
+                <View className="mb-4">
+                  <Text className="mb-2 text-sm font-semibold text-white">Multiplayer</Text>
+                  <View className="flex-row gap-3">
+                    {/* Campo esquerdo - Sim/Não */}
+                    <View className="flex-1">
+                      <Pressable
+                        onPress={() => setShowMultiplayerModal(true)}
+                        className="flex-row items-center rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <UsersIcon size={20} color="#9ca3af" style={{ marginRight: 12 }} />
+                        <Text className="text-white">{formData.multiplayer ? 'Sim' : 'Não'}</Text>
+                      </Pressable>
+                    </View>
+
+                    {/* Campo direito - Tipo (Ex: COOP) */}
+                    <View className="flex-1">
+                      <Pressable
+                        onPress={() => setShowMultiplayerTypeModal(true)}
+                        className="flex-row items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <Text className={multiplayerType ? 'text-white' : 'text-gray-400'}>
+                          {multiplayerType || 'Ex: COOP'}
+                        </Text>
+                        <ChevronDownIcon size={20} color="#9ca3af" />
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Quantidade e Preço - Dois campos lado a lado */}
+                <View className="mb-4">
+                  <View className="flex-row gap-3">
+                    {/* Campo esquerdo - Quantidade */}
+                    <View className="flex-1">
+                      <Text className="mb-2 text-sm font-semibold text-white">
+                        Quantidade <Text className="text-red-400">*</Text>
+                      </Text>
+                      <View className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <TextInput
+                          value={formData.quantity.toString()}
+                          onChangeText={(text) => {
+                            const num = parseInt(text) || 0;
+                            setFormData({ ...formData, quantity: num });
+                          }}
+                          placeholder="0"
+                          placeholderTextColor="#9ca3af"
+                          keyboardType="numeric"
+                          className="text-base text-white"
+                          style={{ color: '#fff' }}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Campo direito - Preço */}
+                    <View className="flex-1">
+                      <Text className="mb-2 text-sm font-semibold text-white">Preço (R$)</Text>
+                      <View className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <TextInput
+                          value={formData.price?.toString() || '0'}
+                          onChangeText={(text) => {
+                            const num = parseFloat(text.replace(',', '.')) || 0;
+                            setFormData({ ...formData, price: num });
+                          }}
+                          placeholder="0,00"
+                          placeholderTextColor="#9ca3af"
+                          keyboardType="decimal-pad"
+                          className="text-base text-white"
+                          style={{ color: '#fff' }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Botões */}
+                <View className="mt-2 flex-row gap-3">
+                  <Pressable
+                    onPress={onClose}
+                    disabled={isSubmitting}
+                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3.5">
+                    <Text className="text-center font-semibold text-white">Cancelar</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1 overflow-hidden rounded-xl py-3.5">
+                    <LinearGradient
+                      colors={['#6b8bff', '#bc7cff']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      {isSubmitting ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text className="text-center font-semibold text-white">Cadastrar</Text>
+                      )}
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+              </ScrollView>
             </View>
           </LinearGradient>
         </View>
@@ -410,12 +390,12 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
           transparent={true}
           animationType="fade"
           onRequestClose={() => setShowPlatformModal(false)}>
-          <Pressable 
-            className="flex-1 bg-black/70 items-center justify-center p-4"
+          <Pressable
+            className="flex-1 items-center justify-center bg-black/70 p-4"
             onPress={() => setShowPlatformModal(false)}>
             <Pressable onPress={(e) => e.stopPropagation()}>
-              <View className="w-80 bg-[#0a0c10] rounded-xl border border-white/10 p-4">
-                <Text className="text-white font-bold text-lg mb-4">Selecione a Plataforma</Text>
+              <View className="w-80 rounded-xl border border-white/10 bg-[#0a0c10] p-4">
+                <Text className="mb-4 text-lg font-bold text-white">Selecione a Plataforma</Text>
                 {platformOptions.map((option) => (
                   <Pressable
                     key={option.value}
@@ -423,8 +403,13 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                       setFormData({ ...formData, platform: option.value });
                       setShowPlatformModal(false);
                     }}
-                    className="py-3 border-b border-white/10 last:border-b-0">
-                    <Text className={formData.platform === option.value ? 'text-blue-400 font-semibold' : 'text-white'}>
+                    className="border-b border-white/10 py-3 last:border-b-0">
+                    <Text
+                      className={
+                        formData.platform === option.value
+                          ? 'font-semibold text-blue-400'
+                          : 'text-white'
+                      }>
                       {option.label}
                     </Text>
                   </Pressable>
@@ -440,12 +425,12 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
           transparent={true}
           animationType="fade"
           onRequestClose={() => setShowMultiplayerModal(false)}>
-          <Pressable 
-            className="flex-1 bg-black/70 items-center justify-center p-4"
+          <Pressable
+            className="flex-1 items-center justify-center bg-black/70 p-4"
             onPress={() => setShowMultiplayerModal(false)}>
             <Pressable onPress={(e) => e.stopPropagation()}>
-              <View className="w-80 bg-[#0a0c10] rounded-xl border border-white/10 p-4">
-                <Text className="text-white font-bold text-lg mb-4">Multiplayer</Text>
+              <View className="w-80 rounded-xl border border-white/10 bg-[#0a0c10] p-4">
+                <Text className="mb-4 text-lg font-bold text-white">Multiplayer</Text>
                 {multiplayerOptions.map((option) => (
                   <Pressable
                     key={option.value}
@@ -453,8 +438,13 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                       setFormData({ ...formData, multiplayer: option.value === 'true' });
                       setShowMultiplayerModal(false);
                     }}
-                    className="py-3 border-b border-white/10 last:border-b-0">
-                    <Text className={(formData.multiplayer ? 'true' : 'false') === option.value ? 'text-blue-400 font-semibold' : 'text-white'}>
+                    className="border-b border-white/10 py-3 last:border-b-0">
+                    <Text
+                      className={
+                        (formData.multiplayer ? 'true' : 'false') === option.value
+                          ? 'font-semibold text-blue-400'
+                          : 'text-white'
+                      }>
                       {option.label}
                     </Text>
                   </Pressable>
@@ -470,12 +460,12 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
           transparent={true}
           animationType="fade"
           onRequestClose={() => setShowMultiplayerTypeModal(false)}>
-          <Pressable 
-            className="flex-1 bg-black/70 items-center justify-center p-4"
+          <Pressable
+            className="flex-1 items-center justify-center bg-black/70 p-4"
             onPress={() => setShowMultiplayerTypeModal(false)}>
             <Pressable onPress={(e) => e.stopPropagation()}>
-              <View className="w-80 bg-[#0a0c10] rounded-xl border border-white/10 p-4">
-                <Text className="text-white font-bold text-lg mb-4">Tipo de Multiplayer</Text>
+              <View className="w-80 rounded-xl border border-white/10 bg-[#0a0c10] p-4">
+                <Text className="mb-4 text-lg font-bold text-white">Tipo de Multiplayer</Text>
                 {multiplayerTypeOptions.map((option) => (
                   <Pressable
                     key={option.value}
@@ -483,8 +473,13 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
                       setMultiplayerType(option.value);
                       setShowMultiplayerTypeModal(false);
                     }}
-                    className="py-3 border-b border-white/10 last:border-b-0">
-                    <Text className={multiplayerType === option.value ? 'text-blue-400 font-semibold' : 'text-white'}>
+                    className="border-b border-white/10 py-3 last:border-b-0">
+                    <Text
+                      className={
+                        multiplayerType === option.value
+                          ? 'font-semibold text-blue-400'
+                          : 'text-white'
+                      }>
                       {option.label}
                     </Text>
                   </Pressable>
@@ -497,4 +492,3 @@ export function CreateGameModal({ visible, onClose }: CreateGameModalProps) {
     </Modal>
   );
 }
-

@@ -29,4 +29,3 @@ export async function updateGame(gameId: number, game: UpdateGameProps) {
     throw error;
   }
 }
-

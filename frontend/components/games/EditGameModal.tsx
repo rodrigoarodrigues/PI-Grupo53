@@ -1,4 +1,12 @@
-import { Modal, View, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
+import {
+  Modal,
+  View,
+  ScrollView,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -92,25 +100,17 @@ export function EditGameModal({ visible, onClose, game }: EditGameModalProps) {
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}>
-      <View className="flex-1 bg-black/70 items-center justify-center p-4">
-        <View className="w-full max-w-2xl bg-[#0a0c10] rounded-2xl border border-white/10 shadow-2xl max-h-[90%]">
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
+      <View className="flex-1 items-center justify-center bg-black/70 p-4">
+        <View className="max-h-[90%] w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0a0c10] shadow-2xl">
           <LinearGradient
             colors={['#6b8bff', '#bc7cff']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             className="rounded-t-2xl p-6">
             <View className="flex-row items-center justify-between">
-              <Text className="text-2xl font-bold text-white">
-                Editar Informações
-              </Text>
-              <Pressable
-                onPress={onClose}
-                className="bg-white/20 rounded-full p-2">
+              <Text className="text-2xl font-bold text-white">Editar Informações</Text>
+              <Pressable onPress={onClose} className="rounded-full bg-white/20 p-2">
                 <XIcon size={20} color="#fff" />
               </Pressable>
             </View>
@@ -121,17 +121,17 @@ export function EditGameModal({ visible, onClose, game }: EditGameModalProps) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}>
             <View className="mb-4">
-              <Text className="text-white font-semibold mb-2">URL da Imagem</Text>
+              <Text className="mb-2 font-semibold text-white">URL da Imagem</Text>
               <Input
                 value={formData.imageUrl}
                 onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
                 placeholder="https://exemplo.com/imagem.jpg"
-                className="bg-white/5 border-white/10 text-white"
+                className="border-white/10 bg-white/5 text-white"
               />
             </View>
 
             <View className="mb-4">
-              <Text className="text-white font-semibold mb-2">Plataforma</Text>
+              <Text className="mb-2 font-semibold text-white">Plataforma</Text>
               <Select
                 options={platformOptions}
                 value={formData.platform || undefined}
@@ -141,32 +141,34 @@ export function EditGameModal({ visible, onClose, game }: EditGameModalProps) {
             </View>
 
             <View className="mb-4">
-              <Text className="text-white font-semibold mb-2">Tamanho</Text>
+              <Text className="mb-2 font-semibold text-white">Tamanho</Text>
               <Input
                 value={formData.size}
                 onChangeText={(text) => setFormData({ ...formData, size: text })}
                 placeholder="Ex: 48 GB"
-                className="bg-white/5 border-white/10 text-white"
+                className="border-white/10 bg-white/5 text-white"
               />
             </View>
 
             <View className="mb-4">
-              <Text className="text-white font-semibold mb-2">Multiplayer</Text>
+              <Text className="mb-2 font-semibold text-white">Multiplayer</Text>
               <Select
                 options={multiplayerOptions}
                 value={formData.multiplayer ? 'true' : 'false'}
-                onValueChange={(value) => setFormData({ ...formData, multiplayer: value === 'true' })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, multiplayer: value === 'true' })
+                }
                 placeholder="Selecione"
               />
             </View>
 
             <View className="mb-6">
-              <Text className="text-white font-semibold mb-2">Idiomas</Text>
+              <Text className="mb-2 font-semibold text-white">Idiomas</Text>
               <Input
                 value={formData.languages}
                 onChangeText={(text) => setFormData({ ...formData, languages: text })}
                 placeholder="Ex: PT BR, EN, ES"
-                className="bg-white/5 border-white/10 text-white"
+                className="border-white/10 bg-white/5 text-white"
               />
             </View>
 
@@ -178,14 +180,11 @@ export function EditGameModal({ visible, onClose, game }: EditGameModalProps) {
                 disabled={isSubmitting}>
                 <Text>Cancelar</Text>
               </Button>
-              <Button
-                onPress={handleSubmit}
-                className="flex-1"
-                disabled={isSubmitting}>
+              <Button onPress={handleSubmit} className="flex-1" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white font-semibold">Salvar</Text>
+                  <Text className="font-semibold text-white">Salvar</Text>
                 )}
               </Button>
             </View>
@@ -195,4 +194,3 @@ export function EditGameModal({ visible, onClose, game }: EditGameModalProps) {
     </Modal>
   );
 }
-
