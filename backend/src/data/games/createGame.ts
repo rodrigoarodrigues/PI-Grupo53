@@ -13,6 +13,7 @@ export const createGameSchema = z.object({
   size: z.string().max(50).optional().nullable(),
   multiplayer: z.boolean().optional().default(false),
   languages: z.string().max(255).optional().nullable(),
+  price: z.number().nonnegative(),
 });
 
 export type CreateGameType = z.infer<typeof createGameSchema>;
@@ -30,7 +31,27 @@ export async function createGame(game: CreateGameType) {
       return null;
     }
 
-    const inserted = await db.insert(gamesTable).values(validated).returning();
+    // Convert price to string before inserting
+    const toInsert = {
+      ...validated,
+      price:
+        validated.price !== undefined && validated.price !== null
+          ? validated.price.toString()
+          : "0.00",
+    };
+
+    const inserted = await db.insert(gamesTable).values(toInsert).returning();
+    if (inserted[0]) {
+      return {
+        ...inserted[0],
+        price:
+          typeof inserted[0].price === "string"
+            ? parseFloat(inserted[0].price)
+            : inserted[0].price === null || inserted[0].price === undefined
+              ? 0
+              : inserted[0].price,
+      };
+    }
     return inserted[0];
   } catch (error) {
     throw error;
