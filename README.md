@@ -1,3 +1,9 @@
+# 👥 Colaboradores
+- Gabriel Henrique Loterio de Araujo
+- Guilherme Reis dos Santos
+- Rodrigo de Andrade Rodrigues
+- Vitor Vieira Santos Ramos
+
 # 🎮 Sakura Arcade - Plataforma de Aluguel de Jogos
 
 Bem-vindo ao **Sakura Arcade**! Uma plataforma moderna e intuitiva para alugar jogos de PlayStation. Este projeto permite que você gerencie uma loja de aluguel de jogos completa, desde o cadastro de jogos até o controle de aluguéis e pagamentos.
